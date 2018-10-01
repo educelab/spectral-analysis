@@ -7,6 +7,7 @@ name = "pypi"
 tensorflow = "*"
 "h5py" = "*"
 pillow = "*"
+scikit-learn = "*"
 
 [dev-packages]
 
