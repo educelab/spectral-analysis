@@ -29,6 +29,7 @@ def main():
     parser.add_argument('input', help='input directory of spectral band .tifs')
     parser.add_argument('output', help='output hdf5 file name')
     parser.add_argument('-n', help='number of points to sample', metavar='n', default=100000)
+    parser.add_argument('--all-points', action='store_true', default=False)
     args = parser.parse_args()
 
     files = os.listdir(args.input)
@@ -36,7 +37,14 @@ def main():
 
     width, height = Image.open(tifs[0]).size
 
-    points = [(random.randint(0, width-1), random.randint(0, height-1)) for n in range(args.n)]
+    if args.all_points:
+        points = []
+        for x in range(width):
+            for y in range(height):
+                points.append((x, y))
+        args.n = width * height
+    else:
+        points = [(random.randint(0, width-1), random.randint(0, height-1)) for n in range(args.n)]
 
     with h5py.File(args.output, "w") as f:
         dset = f.create_dataset("points", (args.n, len(tifs)), dtype='f')
