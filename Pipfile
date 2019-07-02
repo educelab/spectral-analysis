@@ -8,6 +8,9 @@ tensorflow = "*"
 "h5py" = "*"
 pillow = "*"
 scikit-learn = "*"
+matplotlib = "*"
+progressbar = "*"
+opencv-python = "*"
 
 [dev-packages]
 

@@ -4,6 +4,7 @@ import random
 import re
 
 import h5py
+import numpy as np
 from PIL import Image
 
 
@@ -25,6 +26,8 @@ def natural_key(s):
 
 
 def main():
+    random.seed(42)
+    
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', help='input directory of spectral band .tifs')
     parser.add_argument('output', help='output hdf5 file name')
@@ -37,24 +40,33 @@ def main():
 
     width, height = Image.open(tifs[0]).size
 
+    # if args.all_points:
+    #     points = []
+    #     for x in range(width):
+    #         for y in range(height):
+    #             points.append((x, y))
+    #     args.n = width * height
+    # else:
+    #     points = [(random.randint(0, width-1), random.randint(0, height-1)) for n in range(args.n)]
+
+    # with h5py.File(args.output, "w") as f:
+    #     dset = f.create_dataset("points", (args.n, len(tifs)), dtype='f')
+
+    #     for t in range(len(tifs)):
+    #         print(tifs[t])
+    #         im = Image.open(tifs[t])
+    #         for p in range(len(points)):
+    #             f = im.getpixel(points[p])
+    #             dset[p, t] = f
+
     if args.all_points:
-        points = []
-        for x in range(width):
-            for y in range(height):
-                points.append((x, y))
-        args.n = width * height
-    else:
-        points = [(random.randint(0, width-1), random.randint(0, height-1)) for n in range(args.n)]
+        with h5py.File(args.output, 'w') as f:
+            dset = f.create_dataset('image', (height, width, len(tifs)), dtype='f')
 
-    with h5py.File(args.output, "w") as f:
-        dset = f.create_dataset("points", (args.n, len(tifs)), dtype='f')
-
-        for t in range(len(tifs)):
-            print(tifs[t])
-            im = Image.open(tifs[t])
-            for p in range(len(points)):
-                f = im.getpixel(points[p])
-                dset[p, t] = f
+            for tif_idx in range(len(tifs)):
+                print(tifs[tif_idx])
+                im = Image.open(tifs[tif_idx])
+                dset[:,:,tif_idx] = np.array(im)
 
 if __name__ == '__main__':
     main()
