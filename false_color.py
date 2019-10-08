@@ -18,9 +18,9 @@ def main():
     b = np.asarray(Image.open(args.blue)) * 256
     # Write an 8 bit tif because I couldn't get 32 bit to work
     o = np.zeros((r.shape[0], r.shape[1], 3), dtype=np.uint8)
-    o[...,0] = r
-    o[...,1] = g
-    o[...,2] = b
+    o[..., 0] = r
+    o[..., 1] = g
+    o[..., 2] = b
     im = Image.fromarray(o)
     im.save(args.output)
 

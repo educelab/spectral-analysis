@@ -1,9 +1,7 @@
 import argparse
-import os
 import random
 
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 import sklearn.decomposition
@@ -47,6 +45,7 @@ def main():
             values *= 256
             im = Image.fromarray(values)
             im.save(str(component) + '.tif')
+
 
 if __name__ == '__main__':
     main()
