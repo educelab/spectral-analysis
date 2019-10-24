@@ -1,43 +1,160 @@
 import os
 import re
+from abc import ABC, abstractmethod
+from typing import Tuple
+from struct import unpack_from
+
+import numpy as np
+import imageio
 
 
-class SpectralDataHandler:
+class AbstractSpectralIO(ABC):
     file_path: str = None
-    file_format: str = None
-    metadata: dict = {}
+    metadata: dict = None
 
-    def __init__(self, file_path: str = None, file_format: str = None):
-        if file_path:
-            self.file_path = file_path
+    @abstractmethod
+    def __init__(self, file_path: str) -> None:
+        self.file_path = file_path
+        pass
 
-        if file_format:
-            self.file_format = file_format
+    @abstractmethod
+    def get_volume_chunk(self,
+                         x_range: Tuple[int, int],
+                         y_range: Tuple[int, int],
+                         z_range: Tuple[int, int]) -> np.ndarray:
+        pass
+
+    @abstractmethod
+    def set_volume_chunk(self,
+                         x_range: Tuple[int, int],
+                         y_range: Tuple[int, int],
+                         z_range: Tuple[int, int],
+                         data: np.ndarray) -> None:
+        pass
+
+    def get_metadata(self) -> dict:
+        return self.metadata
+
+
+class ENVISpectralIO(AbstractSpectralIO):
+    def __init__(self, file_path: str) -> None:
+        super().__init__(file_path)
+        self.metadata = self._validate_envi_header(self.file_path)
+
+    def get_volume_chunk(self,
+                         x_range: Tuple[int, int],
+                         y_range: Tuple[int, int],
+                         z_range: Tuple[int, int]) -> np.ndarray:
+
+        if self.metadata["byte order"] == 0:
+            byte_order_flag = "<"
         else:
-            self.file_format = self._infer_file_format(self.file_path)
+            byte_order_flag = ">"
 
-        if self.file_format == "envi":
-            self.metadata = self._validate_envi_header(self.file_path)
+        if self.metadata["data type"] == 1:
+            num_bytes_per_data_point = 1
+            format_character_flag = "B"
+            data_type = np.uint8
 
-        # TODO, add other file_format metadata parsing
+        elif self.metadata["data type"] == 2:
+            num_bytes_per_data_point = 2
+            format_character_flag = "h"
+            data_type = np.int16
 
-    def _infer_file_format(self, file_path: str) -> str:
-        if file_path.endswith((".hdf", ".hdf5", ".h5", "he5")):
-            return "hdf"
-        elif file_path.endswith((".fits", ".fit", ".fts")):
-            return "fits"
-        elif file_path.endswith(".hdr") and os.path.exists(file_path[:-4]):
-            return "envi"
-        elif "." not in file_path and os.path.exists(file_path + ".hdr"):
-            self.file_path = file_path + ".hdr"  # TODO, not sure if we should allow inputting data file or header
-            return "envi"
-        elif os.path.isdir(file_path):
-            # TODO, check that format matches spectral camera output
-            pass
+        elif self.metadata["data type"] == 3:
+            num_bytes_per_data_point = 4
+            format_character_flag = "i"
+            data_type = np.int32
+
+        elif self.metadata["data type"] == 4:
+            num_bytes_per_data_point = 4
+            format_character_flag = "f"
+            data_type = np.float32
+
+        elif self.metadata["data type"] == 5:
+            num_bytes_per_data_point = 8
+            format_character_flag = "d"
+            data_type = np.float64
+
+        elif self.metadata["data type"] == 6:
+            raise NotImplementedError("Error, this parser does not yet support complex valued data")  # TODO
+
+        elif self.metadata["data type"] == 9:
+            raise NotImplementedError("Error, this parser does not yet support complex valued data")  # TODO
+
+        elif self.metadata["data type"] == 12:
+            num_bytes_per_data_point = 2
+            format_character_flag = "H"
+            data_type = np.uint16
+
+        elif self.metadata["data type"] == 13:
+            num_bytes_per_data_point = 4
+            format_character_flag = "I"
+            data_type = np.uint32
+
+        elif self.metadata["data type"] == 14:
+            num_bytes_per_data_point = 8
+            format_character_flag = "q"
+            data_type = np.int64
+
+        elif self.metadata["data type"] == 15:
+            num_bytes_per_data_point = 8
+            format_character_flag = "Q"
+            data_type = np.uint64
+
         else:
-            raise ValueError(f"Error, could not infer file format for file {file_path}")
+            raise ValueError(f"Error: data type of value {self.metadata['data type']} un-parsable.")
 
-    @ staticmethod
+        volume = np.zeros(shape=(y_range[1]-y_range[0],
+                                 x_range[1]-x_range[0],
+                                 z_range[1]-z_range[0]), dtype=data_type)
+
+        with open(self.file_path.rstrip(".hdr"), "rb") as infile:
+            file_offset = (
+                    self.metadata["header offset"]
+                    + ((x_range[0])
+                       + (z_range[0] * self.metadata["samples"])
+                       + (y_range[0] * self.metadata["samples"] * self.metadata["bands"]))
+                    * num_bytes_per_data_point)
+
+            if self.metadata["interleave"] == "bil":
+                for y in range(y_range[1] - y_range[0]):
+                    for z in range(z_range[1] - z_range[0]):
+                        infile.seek(file_offset, 1)
+
+                        sample = infile.read(num_bytes_per_data_point * (x_range[1] - x_range[0]))
+
+                        converted_sample = unpack_from(byte_order_flag
+                                                       + (format_character_flag * (x_range[1] - x_range[0])),
+                                                       sample)
+
+                        volume[y, :, z] = converted_sample
+
+                        file_offset = (self.metadata["samples"] - x_range[1] + x_range[0]) * num_bytes_per_data_point
+                    file_offset += (self.metadata["samples"]
+                                    * (self.metadata["bands"]
+                                       - z_range[1]
+                                       + z_range[0])) * num_bytes_per_data_point
+
+            elif self.metadata["interleave"] == "bsq":
+                raise NotImplementedError("Error, BSQ not yet supported")
+
+            elif self.metadata["interleave"] == "bip":
+                raise NotImplementedError("Error, BIP not yet supported")
+
+            else:
+                raise ValueError(f"Error, unable to read interleave type {self.metadata['interleave']}")
+
+        return volume
+
+    def set_volume_chunk(self,
+                         x_range: Tuple[int, int],
+                         y_range: Tuple[int, int],
+                         z_range: Tuple[int, int],
+                         data: np.ndarray) -> None:
+        pass
+
+    @staticmethod
     def _parse_envi_header(header_path: str) -> dict:
         header_data = {}
         with open(header_path) as infile:
@@ -89,7 +206,7 @@ class SpectralDataHandler:
                     extra_data[match.group(1)] = match.group(2)
                     data_string = data_string[:match.start()] + data_string[match.end():]
                 else:
-                    raise ValueError(f"Unparsable data left in ENVI file: {data_string}")
+                    raise ValueError(f"Can not parse data left in ENVI file: {data_string}")
 
         if extra_data:
             # TODO, log extra data
@@ -100,10 +217,53 @@ class SpectralDataHandler:
     def _validate_envi_header(self, header_path: str) -> dict:
         try:
             return self._parse_envi_header(header_path)
-        except ValueError:
-            raise ValueError(f"Error, failed to parse ENVI header file {header_path}")
+
+        except Exception as error:
+            print(f"Error, failed to parse ENVI header file {header_path}")
+            raise error
+
+
+class SpectralDataHandler:
+    file_path: str = None
+    file_format: str = None
+    metadata: dict = None
+
+    def __init__(self, file_path: str = None, file_format: str = None):
+        if file_path:
+            self.file_path = file_path
+
+        if file_format:
+            self.file_format = file_format
+        else:
+            self.file_format = self._infer_file_format(self.file_path)
+
+        if self.file_format == "envi":
+            self.io = ENVISpectralIO(self.file_path)
+            self.metadata = self.io.get_metadata()
+
+        # TODO, implement other file handling
+
+    def _infer_file_format(self, file_path: str) -> str:
+        if file_path.endswith((".hdf", ".hdf5", ".h5", "he5")):
+            return "hdf"
+        elif file_path.endswith((".fits", ".fit", ".fts")):
+            return "fits"
+        elif file_path.endswith(".hdr") and os.path.exists(file_path[:-4]):
+            return "envi"
+        elif "." not in file_path and os.path.exists(file_path + ".hdr"):
+            self.file_path = file_path + ".hdr"  # TODO, not sure if we should allow inputting data file or header
+            return "envi"
+        elif os.path.isdir(file_path):
+            # TODO, check that format matches spectral camera output
+            pass
+        else:
+            raise ValueError(f"Error, could not infer file format for file {file_path}. Is it supported?")
 
 
 if __name__ == "__main__":
     # TODO write argument parser for file io
     x = SpectralDataHandler("/Volumes/HD-Daniel/PHerc118/Photos/2017-Hyperspectral/RawScans/PHerc118-Pezzo1/2017_07_17_10_25_13/2017_07_17_10_25_13raw.hdr")
+    for i in range(x.metadata["bands"]):
+        print(f"Processing band {i}")
+        data = x.io.get_volume_chunk((0, x.metadata["samples"]), (0, x.metadata["lines"]), (i, i + 1))
+        imageio.imwrite(f"pezzo_1_bands/{i}.png", data[:, :, 0])

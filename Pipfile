@@ -11,6 +11,7 @@ scikit-learn = "*"
 matplotlib = "*"
 progressbar = "*"
 opencv-python = "*"
+imageio = "*"
 
 [dev-packages]
 
