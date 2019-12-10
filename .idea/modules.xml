@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/spectral-analysis.iml" filepath="$PROJECT_DIR$/.idea/spectral-analysis.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../spectral_analysis/.idea/spectral_analysis.iml" filepath="$PROJECT_DIR$/../spectral_analysis/.idea/spectral_analysis.iml" />
     </modules>
   </component>
 </project>

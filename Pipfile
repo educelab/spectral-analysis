@@ -12,6 +12,7 @@ matplotlib = "*"
 progressbar = "*"
 opencv-python = "*"
 imageio = "*"
+tqdm = "*"
 
 [dev-packages]
 

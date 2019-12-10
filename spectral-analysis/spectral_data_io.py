@@ -5,7 +5,6 @@ from typing import Tuple
 from struct import unpack_from
 
 import numpy as np
-import imageio
 
 
 class AbstractSpectralIO(ABC):
@@ -35,11 +34,15 @@ class AbstractSpectralIO(ABC):
     def get_metadata(self) -> dict:
         return self.metadata
 
+    # TODO support masked dataset loading
+
 
 class ENVISpectralIO(AbstractSpectralIO):
     def __init__(self, file_path: str) -> None:
         super().__init__(file_path)
         self.metadata = self._validate_envi_header(self.file_path)
+
+    # TODO implement __getitem__ to support slicing operations
 
     def get_volume_chunk(self,
                          x_range: Tuple[int, int],
@@ -109,6 +112,8 @@ class ENVISpectralIO(AbstractSpectralIO):
                                  x_range[1]-x_range[0],
                                  z_range[1]-z_range[0]), dtype=data_type)
 
+        # TODO, file open persistence using with keyword
+
         with open(self.file_path.rstrip(".hdr"), "rb") as infile:
             file_offset = (
                     self.metadata["header offset"]
@@ -137,10 +142,10 @@ class ENVISpectralIO(AbstractSpectralIO):
                                        + z_range[0])) * num_bytes_per_data_point
 
             elif self.metadata["interleave"] == "bsq":
-                raise NotImplementedError("Error, BSQ not yet supported")
+                raise NotImplementedError("Error, BSQ not yet supported")  # TODO
 
             elif self.metadata["interleave"] == "bip":
-                raise NotImplementedError("Error, BIP not yet supported")
+                raise NotImplementedError("Error, BIP not yet supported")  # TODO
 
             else:
                 raise ValueError(f"Error, unable to read interleave type {self.metadata['interleave']}")
@@ -152,7 +157,7 @@ class ENVISpectralIO(AbstractSpectralIO):
                          y_range: Tuple[int, int],
                          z_range: Tuple[int, int],
                          data: np.ndarray) -> None:
-        pass
+        raise NotImplementedError
 
     @staticmethod
     def _parse_envi_header(header_path: str) -> dict:
@@ -241,7 +246,9 @@ class SpectralDataHandler:
             self.io = ENVISpectralIO(self.file_path)
             self.metadata = self.io.get_metadata()
 
-        # TODO, implement other file handling
+        else:
+            # TODO
+            raise NotImplementedError(f"Error, file handling for file format {self.file_format} not yet supported")
 
     def _infer_file_format(self, file_path: str) -> str:
         if file_path.endswith((".hdf", ".hdf5", ".h5", "he5")):
@@ -258,12 +265,3 @@ class SpectralDataHandler:
             pass
         else:
             raise ValueError(f"Error, could not infer file format for file {file_path}. Is it supported?")
-
-
-if __name__ == "__main__":
-    # TODO write argument parser for file io
-    x = SpectralDataHandler("/Volumes/HD-Daniel/PHerc118/Photos/2017-Hyperspectral/RawScans/PHerc118-Pezzo1/2017_07_17_10_25_13/2017_07_17_10_25_13raw.hdr")
-    for i in range(x.metadata["bands"]):
-        print(f"Processing band {i}")
-        data = x.io.get_volume_chunk((0, x.metadata["samples"]), (0, x.metadata["lines"]), (i, i + 1))
-        imageio.imwrite(f"pezzo_1_bands/{i}.png", data[:, :, 0])
