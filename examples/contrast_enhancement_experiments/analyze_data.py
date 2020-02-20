@@ -48,7 +48,6 @@ if __name__ == '__main__':
                 training_data = training_data[mask[i] != 0]
                 training_chunk.append(training_data)
 
-
     training_data = np.concatenate(training_chunk)
 
     data_handler = SpectralDataHandler(CANONICAL_INK_PIXEL_PATH)

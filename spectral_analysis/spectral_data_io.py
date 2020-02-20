@@ -1,5 +1,7 @@
 import os
 import re
+import logging
+import shutil
 from abc import ABC, abstractmethod
 from typing import Tuple
 from struct import unpack_from
@@ -48,6 +50,11 @@ class ENVISpectralIO(AbstractSpectralIO):
                          x_range: Tuple[int, int],
                          y_range: Tuple[int, int],
                          z_range: Tuple[int, int]) -> np.ndarray:
+
+        # Validates range coordinates
+        x_range = (max(0, x_range[0]), min(self.metadata["samples"], x_range[1]))
+        y_range = (max(0, y_range[0]), min(self.metadata["lines"], y_range[1]))
+        z_range = (max(0, z_range[0]), min(self.metadata["bands"], z_range[1]))
 
         if self.metadata["byte order"] == 0:
             byte_order_flag = "<"
@@ -265,3 +272,51 @@ class SpectralDataHandler:
             pass
         else:
             raise ValueError(f"Error, could not infer file format for file {file_path}. Is it supported?")
+
+
+class SpectralPackageManager:
+    def __init__(self, project_path, project_id):
+        self.filepath = os.path.join(project_path, project_id + '.spectralpkg')
+
+        if os.path.exists(self.filepath):
+            # If project already exists just start logger
+            logging.basicConfig(filename=os.path.join(self.filepath, 'Logging.log'))
+
+        else:
+            # TODO figure out why logger isn't logging
+            # If project doesn't exist make the project and start the logger
+            os.mkdir(self.filepath)
+            logging.basicConfig(filename=os.path.join(self.filepath, 'Logging.log'))
+            logging.info("SpectralPkg named {} created at {}".format(project_id + '.spectralpkg', project_path))
+
+            for top_level_folder in ("Artifacts", "Transforms", "Analysis"):
+                os.makedirs(os.path.join(self.filepath, top_level_folder))
+            logging.info("Top level directories successfully created")
+
+    def add_sample(self, path, overwrite=False, use_sym=False, art_id=None):
+        if os.path.isdir(path):
+            if art_id is None:
+                art_id = os.path.basename(os.path.normpath(path))
+            filetype = ""
+
+        else:
+            art_id_temp, filetype = os.path.basename(path).split(".")
+            if art_id is None:
+                art_id = art_id_temp
+
+        # Check to see if the destination folder already exists
+        destination = os.path.join(self.filepath, "Artifacts", art_id)
+
+        if os.path.exists(destination) and not overwrite:
+            logging.warning('Tried to write file {} to {}. '
+                            'Process stopped due to existing file at that location'.format(path, destination))
+            raise ValueError("Error, artifact with that file name already exists")
+
+        os.makedirs(os.path.join(destination, 'SpectralData'), exist_ok=overwrite)
+
+        # TODO, change this to URI style system (save original path)
+        if use_sym:
+            os.symlink(path, os.path.join(destination, 'SpectralData', 'spectraldata' + filetype),
+                       target_is_directory=os.path.isdir(path))
+        else:
+            shutil.copytree(path, os.path.join(destination, 'SpectralData', 'spectraldata' + filetype))
