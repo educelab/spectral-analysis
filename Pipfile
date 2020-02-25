@@ -14,8 +14,11 @@ opencv-python = "*"
 imageio = "*"
 tqdm = "*"
 torch = "*"
+spectral-analysis = {editable = true,path = "."}
 
 [dev-packages]
+pytest = "*"
+tox = "*"
 
 [requires]
 python_version = "3.7"

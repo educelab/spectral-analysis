@@ -1,19 +1,17 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.distributions as distributions
-import torch.nn.functional as F
-from tqdm import tqdm
-
-from spectral_data_io import SpectralDataHandler
-
-from random import shuffle
-from math import ceil
-
-import numpy as np
 import os
-import imageio
 from itertools import product
+from math import ceil
+from random import shuffle
+
+import imageio
+import numpy as np
+import torch
+import torch.distributions as distributions
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from spectral_io import SpectralDataHandler
+from tqdm import tqdm
 
 
 class TestFullConv(nn.Module):
