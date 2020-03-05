@@ -3,10 +3,11 @@ From: ubuntu:16.04
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 0.1
+  VERSION 0.2
   OS Ubuntu 16.04
 
 %files
+  # Copy a local version of the git repository into the singularity container
   /spectral-analysis
 
 %post
@@ -31,11 +32,15 @@ From: ubuntu:16.04
   pip3 install --upgrade pip
   pip install pipenv
 
-  # Create a pipenv for this project
+  # Set the system to properly read UTF-8 encoded files
+  echo "LC_ALL=C.UTF-8" >> ~/.bashrc
+  echo "LANG=C.UTF-8" >> ~/.bashrc
+  source ~/.bashrc
+
+  # Create a pipenv for this project with up to data development code
   cd /spectral-analysis
   git checkout development
-  export LC_ALL=C.UTF-8
-  export LANG=C.UTF-8
+  git pull origin
   pipenv install
 
   # Now install spectral-analysis
@@ -48,19 +53,19 @@ From: ubuntu:16.04
   fi
 
   cd /spectral-analysis
-  git pull remote/development
+  git pull origin
 
-  exec pipenv "$@"
+  exec "$@"
 
 %help
   This container provides an environment for running spectral-analysis.
 
   Building the container:
-    - Prerequisite: the spectral-analysis git repository must exist at $HOME/spectral-analysis on the host machine before building the container. Https is recommended so that it can be manipulated after container creation using your username and password instead of needing ssh ke$
+    - Prerequisite: the spectral-analysis git repository must exist at /spectral-analysis on the host machine before building the container. Https is recommended so that it can be manipulated after container creation using your username and password instead of needing ssh key
     - You may check out a different branch or make changes if desired, but this can all be done after the container is created.
     - Build as usual, for example: sudo singularity build spectral-analysis spectral-analysis.def
 
   Usage:
-    - It is possible to use an overlay to allow one to check out another branch, pull recent changes, or make local edits to spectral-analysis code: `dd if=/dev/zero of=spectral-analysis.overlay bs=1M count=500 && mkfs.ext3 spectral-analysis.overlay; singularity shell --overlay s$
+    - It is possible to use an overlay to allow one to check out another branch, pull recent changes, or make local edits to spectral-analysis code: `dd if=/dev/zero of=spectral-analysis.overlay bs=1M count=500 && mkfs.ext3 spectral-analysis.overlay; singularity shell --overlay spectral_analysis.overlay
 
   This container is intended to be built once, and used with many checkouts of spectral-analysis code. Only when the dependencies change does the container need rebuilding.

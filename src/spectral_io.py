@@ -1,10 +1,10 @@
+import logging
 import os
 import re
-import logging
 import shutil
 from abc import ABC, abstractmethod
-from typing import Tuple
 from struct import unpack_from
+from typing import Tuple
 
 import numpy as np
 
