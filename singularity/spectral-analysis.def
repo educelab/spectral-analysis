@@ -3,7 +3,7 @@ From: ubuntu:16.04
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 0.2
+  VERSION 0.3
   OS Ubuntu 16.04
 
 %files
@@ -16,7 +16,7 @@ From: ubuntu:16.04
 
   # Basic installs
   apt update
-  apt install -y git nano
+  apt install -y git bash
 
   # Store git credentials for up to an hour (in overlay, not container) for convenience
   git config --global credential.helper cache
