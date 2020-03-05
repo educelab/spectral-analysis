@@ -3,7 +3,7 @@ From: ubuntu:16.04
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 0.7
+  VERSION 0.8
   OS Ubuntu 16.04
 
 %files
@@ -40,7 +40,7 @@ From: ubuntu:16.04
   cd /spectral-analysis
 
   git remote rm origin
-  git remote add origin 'dbdo224@code.cs.uky.edu:dbdo224/spectral-analysis.git'
+  git remote add origin https://code.cs.uky.edu/seales-research/spectral-analysis.git
 
   git checkout development
   git pull origin
