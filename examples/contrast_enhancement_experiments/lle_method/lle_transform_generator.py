@@ -10,4 +10,4 @@ if __name__ == '__main__':
 
     print("Writing to a file in the outside directory")
     with open(os.path.join(DATA_DIR, "new_file.txt"), 'w') as outfile:
-        outfile.write("It worked!")
+        outfile.write("It worked-ish!")
