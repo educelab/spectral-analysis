@@ -59,11 +59,11 @@ From: ubuntu:16.04
   This container provides an environment for running spectral-analysis.
 
   Building the container:
-    - Prerequisite: the spectral-analysis git repository must exist at /spectral-analysis on the host machine before building the container. Https is recommended so that it can be manipulated after container creation using your username and password instead of needing ssh key
+    - You will need to enter your https GitLab login information to initially clone the repository from source
     - You may check out a different branch or make changes if desired, but this can all be done after the container is created.
     - Build as usual, for example: sudo singularity build spectral-analysis spectral-analysis.def
 
   Usage:
-    - It is possible to use an overlay to allow one to check out another branch, pull recent changes, or make local edits to spectral-analysis code: `dd if=/dev/zero of=spectral-analysis.overlay bs=1M count=500 && mkfs.ext3 spectral-analysis.overlay; singularity shell --overlay spectral_analysis.overlay
-
-  This container is intended to be built once, and used with many checkouts of spectral-analysis code. Only when the dependencies change does the container need rebuilding.
+    - It is possible to use an overlay to allow one to check out another branch, pull recent changes, or make local edits to spectral-analysis code:
+      `dd if=/dev/zero of=spectral-analysis.overlay bs=1M count=500 && mkfs.ext3 spectral-analysis.overlay; singularity shell --overlay spectral-analysis.overlay spectral-analysis.sif
+      This container is intended to be built once, and used with many checkouts of spectral-analysis code. Only when the dependencies change does the container need rebuilding.
