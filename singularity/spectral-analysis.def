@@ -3,49 +3,40 @@ From: ubuntu:16.04
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 0.9
+  VERSION 0.10
   OS Ubuntu 16.04
 
 %post
-  # Basic installs
+  # Install git
   apt update
   apt install -y git
 
-  # Store git credentials for up to an hour (in overlay, not container) for convenience
-  git config --global credential.helper cache
-  git config --global credential.helper 'cache --timeout=3600'
-
-  # Required to make python3.7 available
+  # Make python3.7 available
   apt install -y software-properties-common
   add-apt-repository -y ppa:deadsnakes/ppa
   apt update
 
-  # Python installs
+  # Install Python 3.7
   apt install -y python3.7-dev python3-pip
   pip3 install --upgrade pip
   pip install pipenv
 
-  # Set the system to properly read UTF-8 encoded files
-  export LC_ALL=C.UTF-8
-  export LANG=C.UTF-8
-
+  # Clone the spectral analysis source from GitLab
   git clone https://code.cs.uky.edu/seales-research/spectral-analysis.git
 
   # Give read/write access in spectral-analysis (so it can later be edited using a persistent overlay)
   chmod --recursive a+rw /spectral-analysis
 
-  # Create a pipenv for this project with up to data development code
+  # Switch to dev branch and install spectral analysis dependencies
   cd /spectral-analysis
-
   git checkout development
-  git pull origin
   pipenv install
 
-  # Now install spectral-analysis
+  # Now install spectral analysis
   pipenv install -e .
 
 %runscript
-  # TODO, figure out how to set these permanently in the post section
+  # TODO, figure out how to set these permanently in the post section, needed for git pull
   export LC_ALL=C.UTF-8
   export LANG=C.UTF-8
 
