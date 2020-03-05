@@ -3,7 +3,7 @@ From: ubuntu:16.04
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 0.12
+  VERSION 1.0
   OS Ubuntu 16.04
 
 %post
@@ -22,7 +22,7 @@ From: ubuntu:16.04
   pip install pipenv
 
   # Clone the spectral analysis source from GitLab
-  git clone git@code.cs.uky.edu:seales-research/spectral-analysis.git
+  git clone https://code.cs.uky.edu/seales-research/spectral-analysis.git
 
   # Give read/write access in spectral-analysis (so it can later be edited using a persistent overlay)
   chmod --recursive a+rw /spectral-analysis
@@ -52,7 +52,6 @@ From: ubuntu:16.04
   fi
 
   cd /spectral-analysis
-  git pull origin
 
   exec "$@"
 
