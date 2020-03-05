@@ -3,17 +3,10 @@ From: ubuntu:16.04
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 0.8
+  VERSION 0.9
   OS Ubuntu 16.04
 
-%files
-  # Copy a local version of the git repository into the singularity container
-  /spectral-analysis
-
 %post
-  # Give read/write access in spectral-analysis (so it can later be edited using a persistent overlay)
-  chmod --recursive a+rw /spectral-analysis
-
   # Basic installs
   apt update
   apt install -y git
@@ -36,11 +29,13 @@ From: ubuntu:16.04
   export LC_ALL=C.UTF-8
   export LANG=C.UTF-8
 
+  git clone https://code.cs.uky.edu/seales-research/spectral-analysis.git
+
+  # Give read/write access in spectral-analysis (so it can later be edited using a persistent overlay)
+  chmod --recursive a+rw /spectral-analysis
+
   # Create a pipenv for this project with up to data development code
   cd /spectral-analysis
-
-  git remote rm origin
-  git remote add origin https://code.cs.uky.edu/seales-research/spectral-analysis.git
 
   git checkout development
   git pull origin
