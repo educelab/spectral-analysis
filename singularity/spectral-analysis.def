@@ -3,7 +3,7 @@ From: ubuntu:16.04
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 0.5
+  VERSION 0.6
   OS Ubuntu 16.04
 
 %files
@@ -11,13 +11,12 @@ From: ubuntu:16.04
   /spectral-analysis
 
 %post
-  bash
   # Give read/write access in spectral-analysis (so it can later be edited using a persistent overlay)
   chmod --recursive a+rw /spectral-analysis
 
   # Basic installs
   apt update
-  apt install -y git bash
+  apt install -y git
 
   # Store git credentials for up to an hour (in overlay, not container) for convenience
   git config --global credential.helper cache
@@ -34,9 +33,8 @@ From: ubuntu:16.04
   pip install pipenv
 
   # Set the system to properly read UTF-8 encoded files
-  echo "LC_ALL=C.UTF-8" >> ~/.bashrc
-  echo "LANG=C.UTF-8" >> ~/.bashrc
-  source ~/.bashrc
+  export LC_ALL=C.UTF-8
+  export LANG=C.UTF-8
 
   # Create a pipenv for this project with up to data development code
   cd /spectral-analysis
@@ -48,6 +46,9 @@ From: ubuntu:16.04
   pipenv install -e .
 
 %runscript
+  export LC_ALL=C.UTF-8
+  export LANG=C.UTF-8
+
   if [ $# -lt 1 ]; then
       echo "Usage: ./container <command>"
       exit 1
