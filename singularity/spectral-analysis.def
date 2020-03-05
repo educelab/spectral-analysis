@@ -3,7 +3,7 @@ From: ubuntu:16.04
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 0.3
+  VERSION 0.4
   OS Ubuntu 16.04
 
 %files
@@ -35,7 +35,6 @@ From: ubuntu:16.04
   # Set the system to properly read UTF-8 encoded files
   echo "LC_ALL=C.UTF-8" >> ~/.bashrc
   echo "LANG=C.UTF-8" >> ~/.bashrc
-  source ~/.bashrc
 
   # Create a pipenv for this project with up to data development code
   cd /spectral-analysis
