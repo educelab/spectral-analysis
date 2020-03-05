@@ -3,7 +3,7 @@ From: ubuntu:16.04
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 0.10
+  VERSION 0.11
   OS Ubuntu 16.04
 
 %post
@@ -30,13 +30,18 @@ From: ubuntu:16.04
   # Switch to dev branch and install spectral analysis dependencies
   cd /spectral-analysis
   git checkout development
+
+  # Needed for pipenv install to read piplock file
+  export LC_ALL=C.UTF-8
+  export LANG=C.UTF-8
+
   pipenv install
 
   # Now install spectral analysis
   pipenv install -e .
 
 %runscript
-  # TODO, figure out how to set these permanently in the post section, needed for git pull
+  # TODO, figure out how to set these permanently in the post section, needed for pipenv install
   export LC_ALL=C.UTF-8
   export LANG=C.UTF-8
 
