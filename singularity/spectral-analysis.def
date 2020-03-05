@@ -24,9 +24,6 @@ From: ubuntu:16.04
   # Clone the spectral analysis source from GitLab
   git clone https://code.cs.uky.edu/seales-research/spectral-analysis.git
 
-  # Give read/write access in spectral-analysis (so it can later be edited using a persistent overlay)
-  chmod --recursive a+rw /spectral-analysis
-
   # Switch to dev branch
   cd /spectral-analysis
   git checkout development
@@ -40,6 +37,9 @@ From: ubuntu:16.04
 
   # Now install spectral analysis
   pipenv install -e .
+
+  # Give read/write access in spectral-analysis (so it can later be edited using a persistent overlay)
+  chmod --recursive a+rw /spectral-analysis
 
 %runscript
   # TODO, figure out how to set these permanently in the post section, needed for pipenv install
