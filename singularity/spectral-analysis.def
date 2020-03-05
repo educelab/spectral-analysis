@@ -3,7 +3,7 @@ From: ubuntu:16.04
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 0.6
+  VERSION 0.7
   OS Ubuntu 16.04
 
 %files
@@ -38,6 +38,10 @@ From: ubuntu:16.04
 
   # Create a pipenv for this project with up to data development code
   cd /spectral-analysis
+
+  git remote rm origin
+  git remote add origin 'git@code.cs.uky.edu.com:dbdo224/spectral-analysis.git'
+
   git checkout development
   git pull origin
   pipenv install
@@ -46,6 +50,7 @@ From: ubuntu:16.04
   pipenv install -e .
 
 %runscript
+  # TODO, figure out how to set these permanently in the post section
   export LC_ALL=C.UTF-8
   export LANG=C.UTF-8
 
