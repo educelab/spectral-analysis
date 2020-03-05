@@ -40,7 +40,7 @@ From: ubuntu:16.04
   cd /spectral-analysis
 
   git remote rm origin
-  git remote add origin 'git@code.cs.uky.edu:dbdo224/spectral-analysis.git'
+  git remote add origin 'dbdo224@code.cs.uky.edu:dbdo224/spectral-analysis.git'
 
   git checkout development
   git pull origin
