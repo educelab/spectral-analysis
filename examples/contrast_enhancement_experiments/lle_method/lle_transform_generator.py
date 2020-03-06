@@ -18,7 +18,7 @@ def get_training_data_paths(f_name):
 
 
 if __name__ == '__main__':
-    print("Starting LLE Experiment")
+    print("Starting LLE Experiment", flush=True)
     OUTPUT_DIR = os.path.expandvars("$SCRATCH/2020-hyperspectral/outputs/lle_experiment")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -29,10 +29,10 @@ if __name__ == '__main__':
     FILE_TYPE = "tiff"
 
     if os.path.exists(LLE_FILENAME):
-        print("Loading existing LLE model")
+        print("Loading existing LLE model", flush=True)
         lle = load(LLE_FILENAME)
     else:
-        print("Beginning LLE Training")
+        print("Beginning LLE Training", flush=True)
         lle = LocallyLinearEmbedding(n_components=EMBEDDING_DIM, n_jobs=-1)
 
         training_chunk = []
@@ -59,13 +59,13 @@ if __name__ == '__main__':
 
         training_set = np.concatenate(training_chunk)
         lle.fit(training_set)
-        print(f"Trained on {len(training_set)} number of pixels")
+        print(f"Trained on {len(training_set)} number of pixels", flush=True)
 
         dump(lle, LLE_FILENAME)
 
-    print(f"LLE results: Reconstruction error for embedding: {lle.reconstruction_error_}")
+    print(f"LLE results: Reconstruction error for embedding: {lle.reconstruction_error_}", flush=True)
     for data_file, _ in get_training_data_paths(DATA_REFERENCE):
-        print(f"Applying transform to {data_file}")
+        print(f"Applying transform to {data_file}", flush=True)
         data_handler = SpectralDataHandler(data_file)
         x_max = data_handler.io.metadata["samples"]
         y_max = data_handler.io.metadata["lines"]
@@ -81,4 +81,4 @@ if __name__ == '__main__':
             file_name = data_file.split("/")[-1].split(".")[0]
             imageio.imwrite(os.path.join(OUTPUT_DIR, f"{file_name}_dimension.{FILE_TYPE}"), image[:, :, i])
 
-    print("Done")
+    print("Done", flush=True)
