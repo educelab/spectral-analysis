@@ -24,7 +24,8 @@ if __name__ == '__main__':
 
     EMBEDDING_DIM = 3
     LLE_FILENAME = os.path.join(OUTPUT_DIR, "fitted_lle.joblib")
-    DATA_REFERENCE = "data_and_mask_paths.txt"
+    DATA_REFERENCE = "/spectral-analysis/examples/contrast_enhancement_experiments/lle_method/data_and_mask_paths.txt"
+
     FILE_TYPE = "tiff"
 
     if os.path.exists(LLE_FILENAME):
