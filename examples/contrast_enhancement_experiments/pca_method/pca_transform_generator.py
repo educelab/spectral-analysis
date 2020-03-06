@@ -2,11 +2,10 @@ import os
 
 import imageio
 import numpy as np
-from sklearn.decomposition import IncrementalPCA, PCA
-from tqdm import tqdm
 from joblib import dump, load
-
-from spectral_data_io import SpectralDataHandler
+from sklearn.decomposition import IncrementalPCA, PCA
+from spectral_io import SpectralDataHandler
+from tqdm import tqdm
 
 
 def get_training_data_paths(f_name):
