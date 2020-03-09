@@ -180,7 +180,7 @@ if __name__ == '__main__':
 
         for i in range(EMBEDDING_DIM):
             file_name = data_file.split("/")[-1].split(".")[0]
-            imageio.imwrite(os.path.join(OUTPUT_DIR, f"{file_name}_dimension.{FILE_TYPE}"), image[:, :, i])
+            imageio.imwrite(os.path.join(OUTPUT_DIR, f"{file_name}_dimension{i}.{FILE_TYPE}"), image[:, :, i])
 
         if EMBEDDING_DIM == 3:
             file_name = data_file.split("/")[-1].split(".")[0]
