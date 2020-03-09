@@ -32,7 +32,6 @@ class DropoutAutoencoder(nn.Module):
         self.relu2 = nn.ReLU()
         self.dropout2 = nn.Dropout(p=0.3)
         self.encoder3 = nn.Linear(64, embedding_dim)
-        self.embedding = nn.Sigmoid()
 
         self.decoder1 = nn.Linear(embedding_dim, 64)
         self.relu3 = nn.ReLU()
@@ -45,13 +44,11 @@ class DropoutAutoencoder(nn.Module):
         self.dropout5 = nn.Dropout(p=0.3)
         self.decoder4 = nn.Linear(256, input_dim)
 
-        self.reconstruction = nn.Sigmoid()
-
     def forward(self, x, embed=False):
         x = self.dropout0(self.relu0(self.encoder0(x)))
         x = self.dropout1(self.relu1(self.encoder1(x)))
         x = self.dropout2(self.relu2(self.encoder2(x)))
-        x = self.embedding(self.encoder3(x))
+        x = self.encoder3(x)
 
         if embed:
             return x
@@ -60,7 +57,7 @@ class DropoutAutoencoder(nn.Module):
             x = self.dropout3(self.relu3(self.decoder1(x)))
             x = self.dropout4(self.relu4(self.decoder2(x)))
             x = self.dropout5(self.relu5(self.decoder3(x)))
-            x = self.reconstruction(self.decoder4(x))
+            x = self.decoder4(x)
             return x
 
 
