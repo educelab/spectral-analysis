@@ -22,7 +22,10 @@ class DropoutAutoencoder(nn.Module):
     def __init__(self, input_dim, embedding_dim):
         super(DropoutAutoencoder, self).__init__()
 
-        self.encoder1 = nn.Linear(input_dim, 128)
+        self.encoder0 = nn.Linear(input_dim, 256)
+        self.relu0 = nn.ReLU()
+        self.dropout0 = nn.Dropout(p=0.3)
+        self.encoder1 = nn.Linear(256, 128)
         self.relu1 = nn.ReLU()
         self.dropout1 = nn.Dropout(p=0.3)
         self.encoder2 = nn.Linear(128, 64)
@@ -37,10 +40,15 @@ class DropoutAutoencoder(nn.Module):
         self.decoder2 = nn.Linear(64, 128)
         self.relu4 = nn.ReLU()
         self.dropout4 = nn.Dropout(p=0.3)
-        self.decoder3 = nn.Linear(128, input_dim)
+        self.decoder3 = nn.Linear(128, 256)
+        self.relu5 = nn.ReLU()
+        self.dropout5 = nn.Dropout(p=0.3)
+        self.decoder4 = nn.Linear(256, input_dim)
+
         self.reconstruction = nn.Sigmoid()
 
     def forward(self, x, embed=False):
+        x = self.dropout0(self.relu0(self.encoder0(x)))
         x = self.dropout1(self.relu1(self.encoder1(x)))
         x = self.dropout2(self.relu2(self.encoder2(x)))
         x = self.embedding(self.encoder3(x))
@@ -51,7 +59,8 @@ class DropoutAutoencoder(nn.Module):
         else:
             x = self.dropout3(self.relu3(self.decoder1(x)))
             x = self.dropout4(self.relu4(self.decoder2(x)))
-            x = self.reconstruction(self.decoder3(x))
+            x = self.dropout5(self.relu5(self.decoder3(x)))
+            x = self.reconstruction(self.decoder4(x))
             return x
 
 
@@ -61,7 +70,7 @@ if __name__ == '__main__':
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     EMBEDDING_DIM = 3
-    MINIBATCH_SIZE = 32
+    MINIBATCH_SIZE = 256
     Autoencoder_FILENAME = os.path.join(OUTPUT_DIR, "fitted_autoencoder.pt")
     DATA_REFERENCE = "/spectral-analysis/examples/contrast_enhancement_experiments/autoencoder_method/data_and_mask_paths.txt"
 
@@ -105,7 +114,14 @@ if __name__ == '__main__':
         validation_data = dataset[int(np.ceil(0.8 * len(dataset))):]
 
         print("Beginning Autoencoder training", flush=True)
-        model = DropoutAutoencoder(370, EMBEDDING_DIM)
+        if torch.cuda.is_available():
+            device = torch.device("cuda:0")
+            print("Running on GPU", flush=True)
+        else:
+            device = torch.device("cpu")
+            print("Running on the CPU", flush=True)
+
+        model = DropoutAutoencoder(370, EMBEDDING_DIM).to(device)
         criterion = nn.MSELoss()
         optimizer = torch.optim.Adam(model.parameters())
 
@@ -138,7 +154,7 @@ if __name__ == '__main__':
 
             print(f"Validation loss for epoch {epoch} == {running_val_loss[-1]}", flush=True)
 
-            if not np.any([running_val_loss[-1] < running_val_loss[-5: -1]]) and epoch > 1:
+            if not np.any([running_val_loss[-1] < running_val_loss[-10: -1]]) and epoch > 1:
                 print(f"Validation loss plateau, stopping training at epoch {epoch}", flush=True)
                 break
 
