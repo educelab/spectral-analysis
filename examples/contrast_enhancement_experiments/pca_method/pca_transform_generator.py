@@ -5,7 +5,6 @@ import numpy as np
 from joblib import dump, load
 from sklearn.decomposition import IncrementalPCA, PCA
 from spectral_io import SpectralDataHandler
-from tqdm import tqdm
 
 
 def get_training_data_paths(f_name):
@@ -60,7 +59,7 @@ if __name__ == '__main__':
             else:
                 mask = np.ones((y_max, x_max))
 
-            for i in tqdm(range(y_max)):
+            for i in range(y_max):
                 if np.any(mask[i] != 0):
                     training_data = data_handler.io.get_volume_chunk(
                         (0, x_max), (i, i + 1), (0, z_max)
