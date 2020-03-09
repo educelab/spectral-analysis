@@ -160,7 +160,7 @@ if __name__ == '__main__':
         for i in range(y_max):
             fitting_data = data_handler.io.get_volume_chunk((0, x_max), (i, i + 1), (0, z_max)).reshape((-1, z_max))
             fitting_data = torch.tensor(fitting_data, dtype=torch.float)
-            image[i] = autoencoder.forward(fitting_data, embed=True).numpy()
+            image[i] = autoencoder.forward(fitting_data, embed=True).detach().numpy()
 
         for i in range(EMBEDDING_DIM):
             file_name = data_file.split("/")[-1].split(".")[0]
