@@ -127,6 +127,9 @@ if __name__ == '__main__':
 
         running_val_loss = []
 
+        best_loss = np.inf
+        new_best_counter = 0
+
         for epoch in range(500):
             model.train()
             shuffle(training_data)
@@ -154,7 +157,13 @@ if __name__ == '__main__':
 
             print(f"Validation loss for epoch {epoch} == {running_val_loss[-1]}", flush=True)
 
-            if not np.any([running_val_loss[-1] < running_val_loss[-10: -1]]) and epoch > 1:
+            if running_val_loss[-1] < best_loss:
+                best_loss = running_val_loss[-1]
+                new_best_counter = 0
+            else:
+                new_best_counter += 1
+
+            if new_best_counter == 5:
                 print(f"Validation loss plateau, stopping training at epoch {epoch}", flush=True)
                 break
 
