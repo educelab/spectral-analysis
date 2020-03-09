@@ -21,13 +21,13 @@ def get_training_data_paths(f_name):
 if __name__ == '__main__':
     print("Starting PCA Experiment", flush=True)
 
-    OUTPUT_DIR = os.path.expandvars("$SCRATCH/2020-hyperspectral/outputs/autoencoder_experiment")
+    OUTPUT_DIR = os.path.expandvars("$SCRATCH/2020-hyperspectral/outputs/pca_experiment")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     EMBEDDING_DIM = 3
     PCA_FILENAME = os.path.join(OUTPUT_DIR, "fitted_pca.joblib")
     METHOD = "PCA"
-    DATA_REFERENCE = "/spectral-analysis/examples/contrast_enhancement_experiments/autoencoder_method/data_and_mask_paths.txt"
+    DATA_REFERENCE = "/spectral-analysis/examples/contrast_enhancement_experiments/pca_method/data_and_mask_paths.txt"
     FILE_TYPE = "tiff"
     # TODO, make the number of y slices pulled each time adaptive to ingest more data at once
     # TODO, figure out this banal multiprocessing for training and pulling data concurrently
