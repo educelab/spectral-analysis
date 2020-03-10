@@ -96,7 +96,7 @@ class TwoLayerAutoEncoder(nn.Module):
             return embedding
 
         else:
-            x = self.encoder1(nn.functional.sigmoid(self.decoder0(embedding)))
+            x = self.decoder1(nn.functional.sigmoid(self.decoder0(embedding)))
             return embedding, x
 
 
@@ -107,7 +107,7 @@ if __name__ == '__main__':
 
     EMBEDDING_DIM = 3
     MINIBATCH_SIZE = 512
-    Autoencoder_FILENAME = os.path.join(OUTPUT_DIR, "fitted_two_layer_autoencoder.pt")
+    Autoencoder_FILENAME = os.path.join(OUTPUT_DIR, "two_layer_autoencoder.pt")
     DATA_REFERENCE = "/spectral-analysis/examples/contrast_enhancement_experiments/autoencoder_method/data_and_mask_paths.txt"
 
     FILE_TYPE = "tiff"
@@ -175,8 +175,8 @@ if __name__ == '__main__':
                                               dtype=torch.float)
                 embedding, output_pred = model(training_batch)
 
-                loss = criterion(output_pred, training_batch) + 1e-5 * regularizer(embedding,
-                                                                                   torch.zeros_like(embedding))
+                loss = criterion(output_pred, training_batch) # + 1e-5 * regularizer(embedding,
+                #                                                                    torch.zeros_like(embedding))
 
                 optimizer.zero_grad()
                 loss.backward()
@@ -189,8 +189,9 @@ if __name__ == '__main__':
                                                 dtype=torch.float)
                 embedding, output_pred = model(validation_batch)
 
-                validation_loss.append(criterion(output_pred, validation_batch).item()) # + 1e-5 * regularizer(embedding,
-                                                                                         #            torch.zeros_like(embedding)).item())
+                validation_loss.append(criterion(output_pred, validation_batch).item()) #+ 1e-5 * regularizer(
+                  #  embedding, torch.zeros_like(embedding)
+               # ).item())
 
             running_val_loss.append(np.mean(validation_loss))
 
