@@ -48,17 +48,17 @@ class DropoutAutoencoder(nn.Module):
         x = self.dropout0(self.relu0(self.encoder0(x)))
         x = self.dropout1(self.relu1(self.encoder1(x)))
         x = self.dropout2(self.relu2(self.encoder2(x)))
-        x = self.encoder3(x)
+        embedding = self.encoder3(x)
 
         if embed:
-            return x
+            return embedding
 
         else:
-            x = self.dropout3(self.relu3(self.decoder1(x)))
+            x = self.dropout3(self.relu3(self.decoder1(embedding)))
             x = self.dropout4(self.relu4(self.decoder2(x)))
             x = self.dropout5(self.relu5(self.decoder3(x)))
             x = self.decoder4(x)
-            return x
+            return embedding, x
 
 
 if __name__ == '__main__':
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     OUTPUT_DIR = os.path.expandvars("$SCRATCH/2020-hyperspectral/outputs/autoencoder_experiment")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    EMBEDDING_DIM = 3
+    EMBEDDING_DIM = 5
     MINIBATCH_SIZE = 256
     Autoencoder_FILENAME = os.path.join(OUTPUT_DIR, "fitted_autoencoder.pt")
     DATA_REFERENCE = "/spectral-analysis/examples/contrast_enhancement_experiments/autoencoder_method/data_and_mask_paths.txt"
@@ -120,6 +120,7 @@ if __name__ == '__main__':
 
         model = DropoutAutoencoder(370, EMBEDDING_DIM).to(device)
         criterion = nn.MSELoss()
+        regularizer = nn.L1Loss()
         optimizer = torch.optim.Adam(model.parameters())
 
         running_val_loss = []
@@ -133,9 +134,10 @@ if __name__ == '__main__':
             for i in range(int(np.ceil(len(training_data) / MINIBATCH_SIZE))):
                 training_batch = torch.tensor(training_data[MINIBATCH_SIZE * i: MINIBATCH_SIZE * (i + 1)],
                                               dtype=torch.float)
-                output_pred = model(training_batch)
+                embedding, output_pred = model(training_batch)
 
-                loss = criterion(output_pred, training_batch)
+                loss = criterion(output_pred, training_batch) + 1e-5 * regularizer(embedding,
+                                                                                   torch.zeros_like(embedding))
 
                 optimizer.zero_grad()
                 loss.backward()
