@@ -148,9 +148,10 @@ if __name__ == '__main__':
             for i in range(int(np.ceil(len(validation_data) / MINIBATCH_SIZE))):
                 validation_batch = torch.tensor(validation_data[MINIBATCH_SIZE * i: MINIBATCH_SIZE * (i + 1)],
                                                 dtype=torch.float)
-                output_pred = model(validation_batch)
+                embedding, output_pred = model(validation_batch)
 
-                validation_loss.append(criterion(output_pred, validation_batch).item())
+                validation_loss.append(criterion(output_pred, validation_batch) + 1e-5 * regularizer(embedding,
+                                                                                                     torch.zeros_like(embedding)))
 
             running_val_loss.append(np.mean(validation_loss))
 
@@ -162,7 +163,7 @@ if __name__ == '__main__':
             else:
                 new_best_counter += 1
 
-            if new_best_counter == 5:
+            if new_best_counter == 5 and epoch > 25:
                 print(f"Validation loss plateau, stopping training at epoch {epoch}", flush=True)
                 break
 
