@@ -203,7 +203,7 @@ if __name__ == '__main__':
             else:
                 new_best_counter += 1
 
-            if new_best_counter >= 5 and epoch > 25:
+            if new_best_counter >= 5:
                 print(f"Validation loss plateau, stopping training at epoch {epoch}", flush=True)
                 break
 
