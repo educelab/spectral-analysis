@@ -79,14 +79,35 @@ class SimpleAutoEncoder(nn.Module):
             return embedding, x
 
 
+class TwoLayerAutoEncoder(nn.Module):
+    def __init__(self, input_dim, embedding_dim):
+        super(TwoLayerAutoEncoder, self).__init__()
+
+        self.encoder0 = nn.Linear(input_dim, 128)
+        self.encoder1 = nn.Linear(128, embedding_dim)
+
+        self.decoder0 = nn.Linear(embedding_dim, 128)
+        self.decoder1 = nn.Linear(128, input_dim)
+
+    def forward(self, x, embed=False):
+        embedding = self.encoder1(nn.functional.sigmoid(self.encoder0(x)))
+
+        if embed:
+            return embedding
+
+        else:
+            x = self.encoder1(nn.functional.sigmoid(self.decoder0(embedding)))
+            return embedding, x
+
+
 if __name__ == '__main__':
-    print("Starting Simple AutoEncoder Experiment", flush=True)
-    OUTPUT_DIR = os.path.expandvars("$SCRATCH/2020-hyperspectral/outputs/simple_autoencoder_experiment")
+    print("Starting Two Layer AutoEncoder Experiment", flush=True)
+    OUTPUT_DIR = os.path.expandvars("$SCRATCH/2020-hyperspectral/outputs/two_layer_autoencoder_experiment")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     EMBEDDING_DIM = 3
     MINIBATCH_SIZE = 512
-    Autoencoder_FILENAME = os.path.join(OUTPUT_DIR, "fitted_simple_autoencoder.pt")
+    Autoencoder_FILENAME = os.path.join(OUTPUT_DIR, "fitted_two_layer_autoencoder.pt")
     DATA_REFERENCE = "/spectral-analysis/examples/contrast_enhancement_experiments/autoencoder_method/data_and_mask_paths.txt"
 
     FILE_TYPE = "tiff"
