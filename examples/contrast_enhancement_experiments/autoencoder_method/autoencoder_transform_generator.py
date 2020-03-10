@@ -157,7 +157,7 @@ if __name__ == '__main__':
             device = torch.device("cpu")
             print("Running on the CPU", flush=True)
 
-        model = SimpleAutoEncoder(370, EMBEDDING_DIM).to(device)
+        model = TwoLayerAutoEncoder(370, EMBEDDING_DIM).to(device)
         criterion = nn.MSELoss()
         regularizer = nn.L1Loss()
         optimizer = torch.optim.Adam(model.parameters())
