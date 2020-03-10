@@ -150,8 +150,8 @@ if __name__ == '__main__':
                                                 dtype=torch.float)
                 embedding, output_pred = model(validation_batch)
 
-                validation_loss.append(criterion(output_pred, validation_batch) + 1e-5 * regularizer(embedding,
-                                                                                                     torch.zeros_like(embedding)))
+                validation_loss.append(criterion(output_pred, validation_batch).item() + 1e-5 * regularizer(embedding,
+                                                                                                     torch.zeros_like(embedding)).item())
 
             running_val_loss.append(np.mean(validation_loss))
 
