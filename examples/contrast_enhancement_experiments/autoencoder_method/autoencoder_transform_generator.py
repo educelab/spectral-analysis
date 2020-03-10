@@ -18,9 +18,9 @@ def get_training_data_paths(f_name):
     return file_paths
 
 
-class DropoutAutoencoder(nn.Module):
+class DropoutAutoEncoder(nn.Module):
     def __init__(self, input_dim, embedding_dim):
-        super(DropoutAutoencoder, self).__init__()
+        super(DropoutAutoEncoder, self).__init__()
 
         self.encoder0 = nn.Linear(input_dim, 256)
         self.relu0 = nn.ReLU()
@@ -61,20 +61,38 @@ class DropoutAutoencoder(nn.Module):
             return embedding, x
 
 
+class SimpleAutoEncoder(nn.Module):
+    def __init__(self, input_dim, embedding_dim):
+        super(SimpleAutoEncoder, self).__init__()
+
+        self.encoder0 = nn.Linear(input_dim, embedding_dim)
+        self.decoder0 = nn.Linear(embedding_dim, input_dim)
+
+    def forward(self, x, embed=False):
+        embedding = self.encoder0(x)
+
+        if embed:
+            return embedding
+
+        else:
+            x = self.decoder0(embedding)
+            return embedding, x
+
+
 if __name__ == '__main__':
-    print("Starting Autoencoder Experiment", flush=True)
-    OUTPUT_DIR = os.path.expandvars("$SCRATCH/2020-hyperspectral/outputs/autoencoder_experiment")
+    print("Starting Simple AutoEncoder Experiment", flush=True)
+    OUTPUT_DIR = os.path.expandvars("$SCRATCH/2020-hyperspectral/outputs/simple_autoencoder_experiment")
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    EMBEDDING_DIM = 5
-    MINIBATCH_SIZE = 256
-    Autoencoder_FILENAME = os.path.join(OUTPUT_DIR, "fitted_autoencoder.pt")
+    EMBEDDING_DIM = 3
+    MINIBATCH_SIZE = 512
+    Autoencoder_FILENAME = os.path.join(OUTPUT_DIR, "fitted_simple_autoencoder.pt")
     DATA_REFERENCE = "/spectral-analysis/examples/contrast_enhancement_experiments/autoencoder_method/data_and_mask_paths.txt"
 
     FILE_TYPE = "tiff"
 
     if os.path.exists(Autoencoder_FILENAME):
-        print("Loading existing Autoencoder model", flush=True)
+        print("Loading existing AutoEncoder model", flush=True)
 
     else:
         print("Loading Training Data", flush=True)
@@ -110,7 +128,7 @@ if __name__ == '__main__':
         training_data = dataset[:int(np.ceil(0.8 * len(dataset)))]
         validation_data = dataset[int(np.ceil(0.8 * len(dataset))):]
 
-        print("Beginning Autoencoder training", flush=True)
+        print("Beginning AutoEncoder training", flush=True)
         if torch.cuda.is_available():
             device = torch.device("cuda:0")
             print("Running on GPU", flush=True)
@@ -118,7 +136,7 @@ if __name__ == '__main__':
             device = torch.device("cpu")
             print("Running on the CPU", flush=True)
 
-        model = DropoutAutoencoder(370, EMBEDDING_DIM).to(device)
+        model = SimpleAutoEncoder(370, EMBEDDING_DIM).to(device)
         criterion = nn.MSELoss()
         regularizer = nn.L1Loss()
         optimizer = torch.optim.Adam(model.parameters())
@@ -128,7 +146,7 @@ if __name__ == '__main__':
         best_loss = np.inf
         new_best_counter = 0
 
-        for epoch in range(500):
+        for epoch in range(100):
             model.train()
             shuffle(training_data)
             for i in range(int(np.ceil(len(training_data) / MINIBATCH_SIZE))):
@@ -150,8 +168,8 @@ if __name__ == '__main__':
                                                 dtype=torch.float)
                 embedding, output_pred = model(validation_batch)
 
-                validation_loss.append(criterion(output_pred, validation_batch).item() + 1e-5 * regularizer(embedding,
-                                                                                                     torch.zeros_like(embedding)).item())
+                validation_loss.append(criterion(output_pred, validation_batch).item()) # + 1e-5 * regularizer(embedding,
+                                                                                         #            torch.zeros_like(embedding)).item())
 
             running_val_loss.append(np.mean(validation_loss))
 
@@ -163,7 +181,7 @@ if __name__ == '__main__':
             else:
                 new_best_counter += 1
 
-            if new_best_counter == 5 and epoch > 25:
+            if new_best_counter >= 5 and epoch > 25:
                 print(f"Validation loss plateau, stopping training at epoch {epoch}", flush=True)
                 break
 
