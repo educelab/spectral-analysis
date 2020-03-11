@@ -82,40 +82,44 @@ def calculate_correlation_statistics(df: pd.DataFrame, save_dir, data_source):
 
 
 if __name__ == '__main__':
-    print("Starting Correlation Analysis", flush=True)
-
-    OUTPUT_DIR = os.path.expandvars("$SCRATCH/2020-hyperspectral/outputs/correlation_analysis")
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-
-    pca_path = "/scratch/dbdo224/2020-hyperspectral/outputs/pca_experiment/fitted_pca.joblib"
+    # print("Starting Correlation Analysis", flush=True)
+    #
+    # OUTPUT_DIR = os.path.expandvars("$SCRATCH/2020-hyperspectral/outputs/correlation_analysis")
+    # os.makedirs(OUTPUT_DIR, exist_ok=True)
+    #
+    # pca_path = "/scratch/dbdo224/2020-hyperspectral/outputs/pca_experiment/fitted_pca.joblib"
     autoencoder_path = "/scratch/dbdo224/2020-hyperspectral/outputs/regularized_two_layer_autoencoder_experiment/regularized_two_layer_autoencoder.pt"
-    DATA_REFERENCE = "/spectral-analysis/examples/contrast_enhancement_experiments/autoencoder_method/data_and_mask_paths.txt"
+    # DATA_REFERENCE = "/spectral-analysis/examples/contrast_enhancement_experiments/autoencoder_method/data_and_mask_paths.txt"
+    #
+    # print("Loading Training Data", flush=True)
+    #
+    # training_chunk = []
+    # for data_file, mask_file in get_training_data_paths(DATA_REFERENCE):
+    #     data_handler = SpectralDataHandler(data_file)
+    #     x_max = data_handler.io.metadata["samples"]
+    #     y_max = data_handler.io.metadata["lines"]
+    #     z_max = data_handler.io.metadata["bands"]
+    #
+    #     if os.path.exists(mask_file):
+    #         mask = imageio.imread(mask_file)[:, :, 3]
+    #         assert mask.shape == (y_max, x_max)
+    #     else:
+    #         mask = np.ones((y_max, x_max))
+    #
+    #     for i in range(y_max):
+    #         if np.any(mask[i] != 0):
+    #             training_data = data_handler.io.get_volume_chunk(
+    #                 (0, x_max), (i, i + 1), (0, z_max)
+    #             ).reshape((-1, z_max))
+    #
+    #             training_data = training_data[mask[i] != 0]
+    #             training_chunk.append(training_data)
+    #
+    # dataset = np.concatenate(training_chunk)
 
-    print("Loading Training Data", flush=True)
-
-    training_chunk = []
-    for data_file, mask_file in get_training_data_paths(DATA_REFERENCE):
-        data_handler = SpectralDataHandler(data_file)
-        x_max = data_handler.io.metadata["samples"]
-        y_max = data_handler.io.metadata["lines"]
-        z_max = data_handler.io.metadata["bands"]
-
-        if os.path.exists(mask_file):
-            mask = imageio.imread(mask_file)[:, :, 3]
-            assert mask.shape == (y_max, x_max)
-        else:
-            mask = np.ones((y_max, x_max))
-
-        for i in range(y_max):
-            if np.any(mask[i] != 0):
-                training_data = data_handler.io.get_volume_chunk(
-                    (0, x_max), (i, i + 1), (0, z_max)
-                ).reshape((-1, z_max))
-
-                training_data = training_data[mask[i] != 0]
-                training_chunk.append(training_data)
-
-    dataset = np.concatenate(training_chunk)
+    dataset = np.ndarray([
+        [j for i in range(370)] for j in range(100)
+    ])
 
     print(f"Loaded {len(dataset)} number of pixels", flush=True)
 
