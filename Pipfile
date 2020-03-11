@@ -15,6 +15,7 @@ imageio = "*"
 tqdm = "*"
 torch = "*"
 spectral-analysis = {editable = true,path = "."}
+pandas = "*"
 
 [dev-packages]
 pytest = "*"
