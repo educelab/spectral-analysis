@@ -5,7 +5,6 @@ import imageio
 import joblib
 import numpy as np
 import pandas as pd
-import torch
 import torch.nn as nn
 from spectral_io import SpectralDataHandler
 
@@ -134,30 +133,30 @@ if __name__ == '__main__':
     # calculate_correlation_statistics(training_df, OUTPUT_DIR, "training_data")
     # calculate_correlation_statistics(validation_df, OUTPUT_DIR, "validation_data")
 
-    print("Loading AutoEncoder from file", flush=True)
-    autoencoder = torch.load(autoencoder_path)
-
-    print("Applying AutoEncoder to Training Data", flush=True)
-    transformed_pixels = np.zeros(shape=(training_data.shape[0], 3))
-    for i, data_point in enumerate(training_data):
-        data_point = torch.tensor(data_point, dtype=torch.float)
-        transformed_pixels[i] = autoencoder.forward(data_point, embed=True).detach().numpy()
-
-    transformed_df = pd.DataFrame(transformed_pixels, columns=[f"Embedding_{i}" for i in range(3)])
-
-    print("Correlating bands for training data with autoencoder applied", flush=True)
-    calculate_correlation_statistics(transformed_df, OUTPUT_DIR, "autoencoder_training")
-
-    print("Applying AutoEncoder to Validation Data", flush=True)
-    transformed_pixels = np.zeros(shape=(validation_data.shape[0], 3))
-    for i, data_point in enumerate(validation_data):
-        data_point = torch.tensor(data_point, dtype=torch.float)
-        transformed_pixels[i] = autoencoder.forward(data_point, embed=True).detach().numpy()
-
-    transformed_df = pd.DataFrame(transformed_pixels, columns=[f"Embedding_{i}" for i in range(3)])
-
-    print("Correlating bands for validation data with autoencoder applied", flush=True)
-    calculate_correlation_statistics(transformed_df, OUTPUT_DIR, "autoencoder_validation")
+    # print("Loading AutoEncoder from file", flush=True)
+    # autoencoder = torch.load(autoencoder_path)
+    #
+    # print("Applying AutoEncoder to Training Data", flush=True)
+    # transformed_pixels = np.zeros(shape=(training_data.shape[0], 3))
+    # for i, data_point in enumerate(training_data):
+    #     data_point = torch.tensor(data_point, dtype=torch.float)
+    #     transformed_pixels[i] = autoencoder.forward(data_point, embed=True).detach().numpy()
+    #
+    # transformed_df = pd.DataFrame(transformed_pixels, columns=[f"Embedding_{i}" for i in range(3)])
+    #
+    # print("Correlating bands for training data with autoencoder applied", flush=True)
+    # calculate_correlation_statistics(transformed_df, OUTPUT_DIR, "autoencoder_training")
+    #
+    # print("Applying AutoEncoder to Validation Data", flush=True)
+    # transformed_pixels = np.zeros(shape=(validation_data.shape[0], 3))
+    # for i, data_point in enumerate(validation_data):
+    #     data_point = torch.tensor(data_point, dtype=torch.float)
+    #     transformed_pixels[i] = autoencoder.forward(data_point, embed=True).detach().numpy()
+    #
+    # transformed_df = pd.DataFrame(transformed_pixels, columns=[f"Embedding_{i}" for i in range(3)])
+    #
+    # print("Correlating bands for validation data with autoencoder applied", flush=True)
+    # calculate_correlation_statistics(transformed_df, OUTPUT_DIR, "autoencoder_validation")
 
     print("Loading PCA from file", flush=True)
     pca = joblib.load(pca_path)
@@ -165,7 +164,7 @@ if __name__ == '__main__':
     print("Applying PCA to Training Data", flush=True)
     transformed_pixels = np.zeros(shape=(training_data.shape[0], 3))
     for i, data_point in enumerate(training_data):
-        transformed_pixels[i] = pca.transform(data_point)
+        transformed_pixels[i] = pca.transform(np.expand_dims(data_point.expand(), axis=0))
 
     transformed_df = pd.DataFrame(transformed_pixels, columns=[f"Embedding_{i}" for i in range(3)])
 
@@ -175,7 +174,7 @@ if __name__ == '__main__':
     print("Applying PCA to Validation Data", flush=True)
     transformed_pixels = np.zeros(shape=(validation_data.shape[0], 3))
     for i, data_point in enumerate(validation_data):
-        transformed_pixels[i] = autoencoder.forward(data_point)
+        transformed_pixels[i] = pca.forward(np.expand_dims(data_point, axis=0))
 
     transformed_df = pd.DataFrame(transformed_pixels, columns=[f"Embedding_{i}" for i in range(3)])
 
