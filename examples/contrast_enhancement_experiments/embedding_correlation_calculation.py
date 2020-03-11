@@ -138,7 +138,7 @@ if __name__ == '__main__':
     transformed_pixels = np.zeros(shape=(training_data.shape[0], 3))
     for i, data_point in enumerate(training_data):
         data_point = torch.tensor(data_point, dtype=torch.float)
-        transformed_pixels[i] = autoencoder.forward(data_point, embed=True)
+        transformed_pixels[i] = autoencoder.forward(data_point, embed=True).detach().numpy()
 
     transformed_df = pd.DataFrame(transformed_pixels, columns=[f"Embedding_{i}" for i in range(3)])
 
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     transformed_pixels = np.zeros(shape=(validation_data.shape[0], 3))
     for i, data_point in enumerate(validation_data):
         data_point = torch.tensor(data_point, dtype=torch.float)
-        transformed_pixels[i] = autoencoder.forward(data_point, embed=True)
+        transformed_pixels[i] = autoencoder.forward(data_point, embed=True).detach().numpy()
 
     transformed_df = pd.DataFrame(transformed_pixels, columns=[f"Embedding_{i}" for i in range(3)])
 
