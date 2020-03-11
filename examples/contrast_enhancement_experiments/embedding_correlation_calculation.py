@@ -2,7 +2,7 @@ import os
 import joblib
 from random import seed, shuffle
 
-import seaborn as sns
+# import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import imageio
@@ -37,26 +37,26 @@ def calculate_correlation_statistics(df: pd.DataFrame, save_dir, data_source):
     print(f"Mean for {data_source} is {average_correlation}")
     print(f"Stf for {data_source} is {standard_deviation_correlation}")
 
-    if correlation_matrix.shape[0] > 40:
-        correlation_matrix = correlation_matrix[
-            [True if i % 5 == 0 else False for i in range(correlation_matrix.shape[0])]
-        ]
-
-    fig = plt.figure()
-
-    ax = sns.heatmap(
-        correlation_matrix,
-        vmin=-1, vmax=1, center=0,
-        cmap=sns.diverging_palette(20, 220, n=200),
-        square=True
-    )
-    ax.set_xticklabels(
-        ax.get_xticklabels(),
-        rotation=45,
-        horizontalalignment='right'
-    )
-
-    plt.savefig(os.path.join(save_dir, f"correlation_plot_{data_source}.png"))
+    # if correlation_matrix.shape[0] > 40:
+    #     correlation_matrix = correlation_matrix[
+    #         [True if i % 5 == 0 else False for i in range(correlation_matrix.shape[0])]
+    #     ]
+    #
+    # fig = plt.figure()
+    #
+    # ax = sns.heatmap(
+    #     correlation_matrix,
+    #     vmin=-1, vmax=1, center=0,
+    #     cmap=sns.diverging_palette(20, 220, n=200),
+    #     square=True
+    # )
+    # ax.set_xticklabels(
+    #     ax.get_xticklabels(),
+    #     rotation=45,
+    #     horizontalalignment='right'
+    # )
+    #
+    # plt.savefig(os.path.join(save_dir, f"correlation_plot_{data_source}.png"))
 
 
 if __name__ == '__main__':
