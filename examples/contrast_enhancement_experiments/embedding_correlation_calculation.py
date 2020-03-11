@@ -174,7 +174,7 @@ if __name__ == '__main__':
     print("Applying PCA to Validation Data", flush=True)
     transformed_pixels = np.zeros(shape=(validation_data.shape[0], 3))
     for i, data_point in enumerate(validation_data):
-        transformed_pixels[i] = pca.forward(np.expand_dims(data_point, axis=0))
+        transformed_pixels[i] = pca.transform(np.expand_dims(data_point, axis=0))
 
     transformed_df = pd.DataFrame(transformed_pixels, columns=[f"Embedding_{i}" for i in range(3)])
 
