@@ -7,9 +7,31 @@ from random import seed, shuffle
 import pandas as pd
 import imageio
 import torch
+import torch.nn as nn
 import numpy as np
 
 from spectral_io import SpectralDataHandler
+
+
+class TwoLayerAutoEncoder(nn.Module):
+    def __init__(self, input_dim, embedding_dim):
+        super(TwoLayerAutoEncoder, self).__init__()
+
+        self.encoder0 = nn.Linear(input_dim, 128)
+        self.encoder1 = nn.Linear(128, embedding_dim)
+
+        self.decoder0 = nn.Linear(embedding_dim, 128)
+        self.decoder1 = nn.Linear(128, input_dim)
+
+    def forward(self, x, embed=False):
+        embedding = self.encoder1(nn.functional.sigmoid(self.encoder0(x)))
+
+        if embed:
+            return embedding
+
+        else:
+            x = self.decoder1(nn.functional.sigmoid(self.decoder0(embedding)))
+            return embedding, x
 
 
 def get_training_data_paths(f_name):
@@ -105,9 +127,9 @@ if __name__ == '__main__':
     training_df = pd.DataFrame(training_data, columns=[f"Band_{i}" for i in range(370)])
     validation_df = pd.DataFrame(validation_data, columns=[f"Band_{i}" for i in range(370)])
 
-    print("Correlating bands for raw training and validation data", flush=True)
-    calculate_correlation_statistics(training_df, OUTPUT_DIR, "training_data")
-    calculate_correlation_statistics(validation_df, OUTPUT_DIR, "validation_data")
+    # print("Correlating bands for raw training and validation data", flush=True)
+    # calculate_correlation_statistics(training_df, OUTPUT_DIR, "training_data")
+    # calculate_correlation_statistics(validation_df, OUTPUT_DIR, "validation_data")
 
     print("Loading AutoEncoder from file", flush=True)
     autoencoder = torch.load(autoencoder_path)
