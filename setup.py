@@ -12,7 +12,7 @@ setup(
     py_modules=["spectral_io"],
     package_dir={
         '': 'src'
-    }
+    }, install_requires=['imageio', 'numpy']
 )
 
 # TODO, add licence, add classifiers, go through setup attribute docs, set up docs, setup high level module like "spyctral", add min requirements, add url and author details, do the pip install manifest thing, setup tox.ini and manifest.ini, setup travis.yml or .gitlab-ci.yml
