@@ -236,13 +236,9 @@ class ENVISpectralIO(AbstractSpectralIO):
 
 
 class SpectralDataHandler:
-    file_path: str = None
-    file_format: str = None
-    metadata: dict = None
 
-    def __init__(self, file_path: str = None, file_format: str = None):
-        if file_path:
-            self.file_path = file_path
+    def __init__(self, file_path: str, file_format: str = None):
+        self.file_path = file_path
 
         if file_format:
             self.file_format = file_format
