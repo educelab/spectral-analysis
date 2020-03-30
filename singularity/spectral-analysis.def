@@ -1,23 +1,16 @@
 Bootstrap: docker
-From: ubuntu:16.04
+From: python:3
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 1.1
-  OS Ubuntu 16.04
+  VERSION 1.2
 
 %post
   # Install git
   apt update
   apt install -y git
 
-  # Make python3.7 available
-  apt install -y software-properties-common
-  add-apt-repository -y ppa:deadsnakes/ppa
-  apt update
-
-  # Install Python 3.7
-  apt install -y python3.7-dev python3-pip
+  # Install Pipenv
   pip3 install --upgrade pip
   pip install pipenv
 
@@ -29,24 +22,16 @@ From: ubuntu:16.04
   cd /spectral-analysis
   git checkout development
 
-  # Needed for pipenv install to read piplock file
-  export LC_ALL=C.UTF-8
-  export LANG=C.UTF-8
-
   # Install project dependencies
   pipenv install
 
   # Install spectral analysis
   pipenv install -e .
 
-  # Give read/write access in spectral-analysis (so it can later be edited using a persistent overlay, only applies to dev branch)
+  # Give read/write access in spectral-analysis (so it can later be edited using a persistent overlay)
   chmod --recursive a+rw /spectral-analysis
 
 %runscript
-  # TODO, figure out how to set these permanently in the post section, needed for pipenv install
-  export LC_ALL=C.UTF-8
-  export LANG=C.UTF-8
-
   cd /spectral-analysis
 
   exec "$@"
