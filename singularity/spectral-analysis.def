@@ -3,16 +3,24 @@ From: python:3
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 1.2
+  VERSION 1.3
 
 %post
+  # Build directory structure for LCC
+  mkdir /scratch
+  mkdir /project
+  mkdir /pscratch
+  mkdir /share
+  mkdir /opt/ohpc
+  mkdir /mnt/gpfs2_16m
+  mkdir /mnt/gpfs2_4m
+
   # Install git
   apt update
   apt install -y git
 
-  # Install Pipenv
+  # Upgrade pip
   pip3 install --upgrade pip
-  pip install pipenv
 
   # Clone the spectral analysis source from GitLab
   # TODO, figure out how to get this clone setup with ssh so an auto update can be written into the runscript
@@ -21,9 +29,6 @@ From: python:3
   # Switch to dev branch
   cd /spectral-analysis
   git checkout development
-
-  # Install project dependencies
-  pipenv install
 
   # Install spectral analysis
   pipenv install -e .

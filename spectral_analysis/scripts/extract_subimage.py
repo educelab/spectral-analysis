@@ -5,9 +5,10 @@ import os
 import imageio
 import numpy as np
 
-from spectral_io import SpectralDataHandler
+from spectral_analysis.spectral_io import SpectralDataHandler
 
 if __name__ == '__main__':
+    # TODO, fix argument parser, modify to support spectral packages
     # parser = argparse.ArgumentParser()
     # parser.add_argument("-o", "--output_dir", help="output directory, defaults to present working directory")
     # parser.add_argument("upper_left", nargs=2, help="upper left point (inclusive)")

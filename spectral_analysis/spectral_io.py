@@ -236,7 +236,6 @@ class ENVISpectralIO(AbstractSpectralIO):
 
 
 class SpectralDataHandler:
-
     def __init__(self, file_path: str, file_format: str = None):
         self.file_path = file_path
 
@@ -248,6 +247,14 @@ class SpectralDataHandler:
         if self.file_format == "envi":
             self.io = ENVISpectralIO(self.file_path)
             self.metadata = self.io.get_metadata()
+
+        elif self.file_format == "path_ref":
+            with open(self.file_path) as infile:
+                reference_path = infile.read()
+
+            dummy_handler = SpectralDataHandler(reference_path)
+            self.io = dummy_handler.io
+            self.metadata = dummy_handler.io.get_metadata()
 
         else:
             # TODO
@@ -271,48 +278,99 @@ class SpectralDataHandler:
 
 
 class SpectralPackageManager:
-    def __init__(self, project_path, project_id):
-        self.filepath = os.path.join(project_path, project_id + '.spectralpkg')
+    @classmethod
+    def make_package(cls, base_path, project_id):
+        file_path = os.path.join(base_path, project_id + ".spctrl")
+        os.makedirs(file_path)
+
+        for top_level_folder in ("samples", "transforms", "pipelines", "pipeline_output"):
+            os.makedirs(os.path.join(file_path, top_level_folder))
+
+        # TODO, in this stage, add a metadata json file specifying package version so
+        #  hierarchy can be changed in the future if needed
+        manager = cls(file_path)
+        manager.package_logger.info("SpectralPkg named {} created at {}".format(project_id + '.spctrl', base_path))
+
+        return manager
+
+    def __init__(self, project_path):
+        self.filepath = project_path
 
         if os.path.exists(self.filepath):
-            # If project already exists just start logger
-            logging.basicConfig(filename=os.path.join(self.filepath, 'Logging.log'))
+            self.package_logger = logging.getLogger("package")
+            self.package_logger.setLevel(logging.INFO)
+            self.package_logger.addHandler(logging.FileHandler(os.path.join(self.filepath, "package_log.log")))
+
+            self.samples_logger = logging.getLogger("package.samples")
+            self.samples_logger.addHandler(logging.FileHandler(os.path.join(self.filepath, "samples", "samples_log.log")))
+
+            self.transforms_logger = logging.getLogger("package.transforms")
+            self.transforms_logger.addHandler(logging.FileHandler(os.path.join(self.filepath, "transforms", "transforms_log.log")))
+
+            self.pipelines_logger = logging.getLogger("package.pipelines")
+            self.pipelines_logger.addHandler(logging.FileHandler(os.path.join(self.filepath, "pipelines", "pipelines_log.log")))
 
         else:
-            # TODO figure out why logger isn't logging
-            # If project doesn't exist make the project and start the logger
-            os.mkdir(self.filepath)
-            logging.basicConfig(filename=os.path.join(self.filepath, 'Logging.log'))
-            logging.info("SpectralPkg named {} created at {}".format(project_id + '.spectralpkg', project_path))
+            raise ValueError("Error, path to spectral package does not exist")
 
-            for top_level_folder in ("Artifacts", "Transforms", "Analysis"):
-                os.makedirs(os.path.join(self.filepath, top_level_folder))
-            logging.info("Top level directories successfully created")
-
-    def add_sample(self, path, overwrite=False, use_sym=False, art_id=None):
+    def add_sample(self, path, sample_id=None, overwrite=False, copy_path=False, cont_mask=None, class_mask=None):
         if os.path.isdir(path):
-            if art_id is None:
-                art_id = os.path.basename(os.path.normpath(path))
-            filetype = ""
+            if sample_id is None:
+                sample_id = os.path.basename(os.path.normpath(path))
+            file_type = None
 
         else:
-            art_id_temp, filetype = os.path.basename(path).split(".")
-            if art_id is None:
-                art_id = art_id_temp
+            base, file_type = os.path.basename(os.path.normpath(path)).split(".")
+            if sample_id is None:
+                sample_id = base
 
-        # Check to see if the destination folder already exists
-        destination = os.path.join(self.filepath, "Artifacts", art_id)
+        if copy_path:
+            file_type = "path_ref"
 
-        if os.path.exists(destination) and not overwrite:
-            logging.warning('Tried to write file {} to {}. '
-                            'Process stopped due to existing file at that location'.format(path, destination))
-            raise ValueError("Error, artifact with that file name already exists")
+        destination = os.path.join(self.filepath, "samples", sample_id)
 
-        os.makedirs(os.path.join(destination, 'SpectralData'), exist_ok=overwrite)
+        # Check to see if we would be overwriting existing data, handle by set preference
+        if os.path.exists(destination):
+            if not overwrite:
+                self.samples_logger.warning('Tried to write file {} to {}. Process stopped due to existing '
+                                            'file at that location'.format(path, destination))
+                raise ValueError("Error, artifact with identifier {} already exists".format(sample_id))
+            else:
+                self.samples_logger.warning('Overwriting existing file at {}'.format(destination))
+                shutil.rmtree(destination)
 
-        # TODO, change this to URI style system (save original path)
-        if use_sym:
-            os.symlink(path, os.path.join(destination, 'SpectralData', 'spectraldata' + filetype),
-                       target_is_directory=os.path.isdir(path))
+        os.makedirs(destination, exist_ok=True)
+        if file_type == "":
+            file_destination = os.path.join(destination, "spectral_data")
         else:
-            shutil.copytree(path, os.path.join(destination, 'SpectralData', 'spectraldata' + filetype))
+            file_destination = os.path.join(destination, "spectral_data.{}".format(file_type))
+
+        if file_type == "path_ref":
+            with open(file_destination, "w") as outfile:
+                outfile.write(path)
+        elif file_type == "":
+            shutil.copy2(path, file_destination)
+            shutil.copy2(path + ".hdr", file_destination + ".hdr")
+        elif file_type == "hdr":
+            shutil.copy2(path, file_destination)
+            shutil.copy2(path[:-4], file_destination[:-4])
+        elif file_type is None:
+            shutil.copytree(path, file_destination)
+        else:
+            shutil.copy2(path, file_destination)
+
+        self.samples_logger.info(f"Copied new sample with id {sample_id} from {path} to {file_destination}")
+
+        # TODO, handle addition of masks with unique identifiers, reconcile into a single mask system
+        if cont_mask is not None:
+            pass
+        if class_mask is not None:
+            pass
+
+        # TODO, also write metadata json file once you know what metadata needs stored
+
+    def remove_sample(self, identifier):
+        sample_path = os.path.join(self.filepath, "samples", identifier)
+        shutil.rmtree(sample_path)
+
+        self.samples_logger.info(f"Removed sample at location {sample_path}")
