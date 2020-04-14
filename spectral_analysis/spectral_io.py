@@ -322,12 +322,15 @@ class SpectralPackageManager:
             self.package_logger.addHandler(logging.FileHandler(os.path.join(self.filepath, "package_log.log")))
 
             self.samples_logger = logging.getLogger("samples")
+            self.samples_logger.setLevel(logging.INFO)
             self.samples_logger.addHandler(logging.FileHandler(os.path.join(self.samples_path, "samples_log.log")))
 
             self.transforms_logger = logging.getLogger("transforms")
+            self.transforms_logger.setLevel(logging.INFO)
             self.transforms_logger.addHandler(logging.FileHandler(os.path.join(self.transforms_path, "transforms_log.log")))
 
             self.pipelines_logger = logging.getLogger("pipelines")
+            self.pipelines_logger.setLevel(logging.INFO)
             self.pipelines_logger.addHandler(logging.FileHandler(os.path.join(self.pipelines_path, "pipelines_log.log")))
 
         else:
