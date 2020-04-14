@@ -159,6 +159,7 @@ class ENVISpectralIO(AbstractSpectralIO):
 
         return volume
 
+    # TODO, implement file writing
     def set_volume_chunk(self,
                          x_range: Tuple[int, int],
                          y_range: Tuple[int, int],
@@ -390,3 +391,8 @@ class SpectralPackageManager:
         shutil.rmtree(sample_path)
 
         self.samples_logger.info(f"Removed sample at location {sample_path}")
+
+    def get_sample_handler(self, sample_id):
+        data_dir = os.path.join(self.samples_path, sample_id)
+        data_file = [file for file in os.listdir(data_dir) if "spectral_data" in file][0]
+        return SpectralDataHandler(data_file)

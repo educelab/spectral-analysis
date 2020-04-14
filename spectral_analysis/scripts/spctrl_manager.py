@@ -1,6 +1,9 @@
 import os
 import argparse
 
+import numpy as np
+import imageio
+
 from spectral_analysis.spectral_io import SpectralPackageManager
 
 # Initialize the top level parser with common flags, set it up for the various mode flags as sub parsers
@@ -44,9 +47,14 @@ list_parser = subparsers.add_parser("list", help="List all sample, transforms, o
 list_parser.add_argument("-w", "--which", default="all", choices=("all", "samples", "transforms", "pipelines"),
                          nargs="?", help="Specify what type of package contents to list")
 
-# TODO, implement view parser
 # The view sub parser handles visualization of samples, transforms, or pipelines
 view_parser = subparsers.add_parser("view", help="Visualize a sample, transform, or pipeline")
+view_parser.add_argument("-p1", "--point_1", nargs=2, default=(0, 0), help="x y coordinates of  to extract")
+view_parser.add_argument("-p2", "--point_2", nargs=2, default=(np.inf, np.inf))
+view_parser.add_argument("-od", "--output_dir", default=".", type=os.path.abspath)
+view_parser.add_argument("-sid", "--sample_ids", nargs="+", type=os.path.abspath)
+view_parser.add_argument("-of", "--output_filetype", default="png")
+view_parser.add_argument("-sb", "--spectral_band", type=float, required=True)
 
 # TODO, implement run parser
 # The run parser handles executing computational graphs defined in pipelines
@@ -105,12 +113,32 @@ def main():
                 for pipeline_id in manager.pipeline_ids:
                     print("\t", pipeline_id)
 
+        # TODO, expand view to open files etc
+        elif args.mode == "view":
+            x1, y1 = args.point_1
+            x2, y2 = args.point_2
+
+            for sample_id in args.sample_ids:
+                save_name = f"{sample_id}.{args.output_filetype}"
+
+                data_handler = manager.get_sample_handler(sample_id)
+
+                # Do this gross mess because the envi parser counts wavelength metadata as
+                # extra info without a dedicated parsing section in the segment in which it is initially read in
+                image_bands = data_handler.metadata["extra data"][
+                    "wavelength"].replace(",", "").strip("{}\n").split("\n")
+                image_bands = np.array(image_bands, dtype=np.float)
+                band_difference = np.abs(image_bands - args.spectral_band)
+                image_index = np.argmin(band_difference)
+
+                print(f"Extracting image with closest wavelength of {image_bands[image_index]}")
+
+                image = data_handler.io.get_volume_chunk((x1, x2), (y1, y2), (image_index, image_index + 1))
+
+                imageio.imsave(os.path.join(args.output_dir, save_name), image)
+
         elif args.mode == "run":
             # TODO, implement pipeline handler which will process and execute scripts chaining data and transforms
-            pass
-
-        elif args.mode == "view":
-            # TODO, incorporate extract_subimage.py into manager framework with options to
             pass
 
 
