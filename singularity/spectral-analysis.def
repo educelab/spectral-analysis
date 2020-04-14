@@ -3,7 +3,7 @@ From: python:3
 
 %labels
   MAINTAINER Daniel Dopp <danieldopp@uky.edu>
-  VERSION 1.4
+  VERSION 1.5
 
 %post
   # Build directory structure for LCC
@@ -18,6 +18,9 @@ From: python:3
   # Install git
   apt update
   apt install -y git
+
+  # Install tree, good for visualizing Spectral Package structure
+  apt install tree
 
   # Upgrade pip
   pip3 install --upgrade pip
@@ -37,8 +40,6 @@ From: python:3
   chmod --recursive a+rw /spectral-analysis
 
 %runscript
-  cd /spectral-analysis
-
   exec "$@"
 
 %help
