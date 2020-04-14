@@ -278,6 +278,18 @@ class SpectralDataHandler:
 
 
 class SpectralPackageManager:
+    @property
+    def sample_ids(self):
+        return [directory for directory in os.listdir(self.samples_path) if os.path.isdir(directory)]
+
+    @property
+    def transform_ids(self):
+        return [directory for directory in os.listdir(self.transforms_path) if os.path.isdir(directory)]
+
+    @property
+    def pipeline_ids(self):
+        return [directory for directory in os.listdir(self.pipelines_path) if os.path.isdir(directory)]
+
     @classmethod
     def make_package(cls, base_path, project_id):
         file_path = os.path.join(base_path, project_id + ".spctrl")
@@ -295,6 +307,9 @@ class SpectralPackageManager:
 
     def __init__(self, project_path):
         self.filepath = project_path
+        self.samples_path = os.path.join(self.filepath, "samples")
+        self.transforms_path = os.path.join(self.filepath, "transforms")
+        self.pipelines_path = os.path.join(self.filepath, "pipelines")
 
         if os.path.exists(self.filepath):
             # TODO, add a formatter to each file handler so it lists time and user for event listing
@@ -303,13 +318,13 @@ class SpectralPackageManager:
             self.package_logger.addHandler(logging.FileHandler(os.path.join(self.filepath, "package_log.log")))
 
             self.samples_logger = logging.getLogger("package.samples")
-            self.samples_logger.addHandler(logging.FileHandler(os.path.join(self.filepath, "samples", "samples_log.log")))
+            self.samples_logger.addHandler(logging.FileHandler(os.path.join(self.samples_path, "samples_log.log")))
 
             self.transforms_logger = logging.getLogger("package.transforms")
-            self.transforms_logger.addHandler(logging.FileHandler(os.path.join(self.filepath, "transforms", "transforms_log.log")))
+            self.transforms_logger.addHandler(logging.FileHandler(os.path.join(self.transforms_path, "transforms_log.log")))
 
             self.pipelines_logger = logging.getLogger("package.pipelines")
-            self.pipelines_logger.addHandler(logging.FileHandler(os.path.join(self.filepath, "pipelines", "pipelines_log.log")))
+            self.pipelines_logger.addHandler(logging.FileHandler(os.path.join(self.pipelines_path, "pipelines_log.log")))
 
         else:
             raise ValueError("Error, path to spectral package does not exist")

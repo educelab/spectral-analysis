@@ -66,41 +66,52 @@ def main():
         else:
             SpectralPackageManager.make_package(args.project_path, args.project_id)
 
-    elif args.mode == "add":
-        # Assertion checks to ensure number of sample ids/sample masks match number of samples
-        assert args.sample_id is None or len(args.sample_id) == len(args.sample_path), \
-            "Number of sample id's must match the number of samples"
-        assert args.content_mask is None or len(args.content_mask) == len(args.sample_path), \
-            "Number of content masks must match the number of samples"
-        assert args.class_mask is None or len(args.class_mask) == len(args.sample_path), \
-            "Number of class masks must match the number of samples"
-
+    else:
         manager = SpectralPackageManager(filepath)
 
-        for i, sample_path in enumerate(args.sample_path):
-            sample_id = None if args.sample_id is None else args.sample_id[i]
-            cont_mask = None if args.content_mask is None else args.content_mask[i]
-            class_mask = None if args.class_mask is None else args.class_mask[i]
-            manager.add_sample(sample_path, sample_id=sample_id, overwrite=args.overwrite_files,
-                               copy_path=args.copy_source, cont_mask=cont_mask, class_mask=class_mask)
+        if args.mode == "add":
+            # Assertion checks to ensure number of sample ids/sample masks match number of samples
+            assert args.sample_id is None or len(args.sample_id) == len(args.sample_path), \
+                "Number of sample id's must match the number of samples"
+            assert args.content_mask is None or len(args.content_mask) == len(args.sample_path), \
+                "Number of content masks must match the number of samples"
+            assert args.class_mask is None or len(args.class_mask) == len(args.sample_path), \
+                "Number of class masks must match the number of samples"
 
-    elif args.mode == "remove":
-        manager = SpectralPackageManager(filepath)
+            for i, sample_path in enumerate(args.sample_path):
+                sample_id = None if args.sample_id is None else args.sample_id[i]
+                cont_mask = None if args.content_mask is None else args.content_mask[i]
+                class_mask = None if args.class_mask is None else args.class_mask[i]
+                manager.add_sample(sample_path, sample_id=sample_id, overwrite=args.overwrite_files,
+                                   copy_path=args.copy_source, cont_mask=cont_mask, class_mask=class_mask)
 
-        for id_val in args.sample_id:
-            manager.remove_sample(id_val)
+        elif args.mode == "remove":
+            for id_val in args.sample_id:
+                manager.remove_sample(id_val)
 
-    elif args.mode == "list":
-        # TODO, implement list command
-        pass
+        elif args.mode == "list":
+            if args.which in ("all", "samples"):
+                print("Samples:")
+                for sample_id in manager.sample_ids:
+                    print("\t", sample_id)
 
-    elif args.mode == "run":
-        # TODO, implement pipeline handler which will process and execute scripts chaining data and transforms
-        pass
+            if args.which in ("all", "transforms"):
+                print("Transforms:")
+                for transform_id in manager.transform_ids:
+                    print("\t", transform_id)
 
-    elif args.mode == "view":
-        # TODO, incorporate extract_subimage.py into manager framework with options to
-        pass
+            if args.which in ("all", "pipelines"):
+                print("Pipelines:")
+                for pipeline_id in manager.pipeline_ids:
+                    print("\t", pipeline_id)
+
+        elif args.mode == "run":
+            # TODO, implement pipeline handler which will process and execute scripts chaining data and transforms
+            pass
+
+        elif args.mode == "view":
+            # TODO, incorporate extract_subimage.py into manager framework with options to
+            pass
 
 
 if __name__ == '__main__':
