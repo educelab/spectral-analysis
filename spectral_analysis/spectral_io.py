@@ -297,6 +297,7 @@ class SpectralPackageManager:
         self.filepath = project_path
 
         if os.path.exists(self.filepath):
+            # TODO, add a formatter to each file handler so it lists time and user for event listing
             self.package_logger = logging.getLogger("package")
             self.package_logger.setLevel(logging.INFO)
             self.package_logger.addHandler(logging.FileHandler(os.path.join(self.filepath, "package_log.log")))
