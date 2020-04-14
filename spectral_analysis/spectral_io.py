@@ -271,6 +271,8 @@ class SpectralDataHandler:
         elif "." not in file_path and os.path.exists(file_path + ".hdr"):
             self.file_path = file_path + ".hdr"  # TODO, not sure if we should allow inputting data file or header
             return "envi"
+        elif file_path.endswith("path_ref"):
+            return "path_ref"
         elif os.path.isdir(file_path):
             # TODO, check that format matches spectral camera output
             pass
@@ -281,7 +283,8 @@ class SpectralDataHandler:
 class SpectralPackageManager:
     @property
     def sample_ids(self):
-        return [directory for directory in os.listdir(self.samples_path) if os.path.isdir(directory)]
+        return [directory for directory in os.listdir(self.samples_path)
+                if os.path.isdir(os.path.join(self.samples_path, directory))]
 
     @property
     def transform_ids(self):
@@ -318,13 +321,13 @@ class SpectralPackageManager:
             self.package_logger.setLevel(logging.INFO)
             self.package_logger.addHandler(logging.FileHandler(os.path.join(self.filepath, "package_log.log")))
 
-            self.samples_logger = logging.getLogger("package.samples")
+            self.samples_logger = logging.getLogger("samples")
             self.samples_logger.addHandler(logging.FileHandler(os.path.join(self.samples_path, "samples_log.log")))
 
-            self.transforms_logger = logging.getLogger("package.transforms")
+            self.transforms_logger = logging.getLogger("transforms")
             self.transforms_logger.addHandler(logging.FileHandler(os.path.join(self.transforms_path, "transforms_log.log")))
 
-            self.pipelines_logger = logging.getLogger("package.pipelines")
+            self.pipelines_logger = logging.getLogger("pipelines")
             self.pipelines_logger.addHandler(logging.FileHandler(os.path.join(self.pipelines_path, "pipelines_log.log")))
 
         else:
@@ -394,5 +397,6 @@ class SpectralPackageManager:
 
     def get_sample_handler(self, sample_id):
         data_dir = os.path.join(self.samples_path, sample_id)
-        data_file = [file for file in os.listdir(data_dir) if "spectral_data" in file][0]
+        data_file = [os.path.join(data_dir, file)
+                     for file in os.listdir(data_dir) if "spectral_data" in file][0]
         return SpectralDataHandler(data_file)

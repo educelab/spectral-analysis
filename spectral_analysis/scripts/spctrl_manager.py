@@ -26,9 +26,9 @@ add_parser.add_argument('sample_path', nargs='*', type=os.path.abspath,
 add_parser.add_argument('-s_id', '--sample_id', nargs='*',
                         help='Identifiers for each sample data file. Required for all or none, defaults to "sample_n"')
 # TODO, wrap masks into one type then have mask purpose defined later in the pipeline
-add_parser.add_argument('-con_m', '--content_mask', nargs='*', type=os.path.abspath,
+add_parser.add_argument('-con_m', '--content_mask', nargs='*',
                         help='Optional path to sample content masks. Required for all or none')
-add_parser.add_argument('-cla_m', '--class_mask', nargs='*', type=os.path.abspath,
+add_parser.add_argument('-cla_m', '--class_mask', nargs='*',
                         help='Optional path to sample class masks. Required for all or none')
 add_parser.add_argument('-cs', '--copy_source', action='store_true',
                         help='Use this flag to store only a reference to the source data object '
@@ -51,8 +51,8 @@ list_parser.add_argument("-w", "--which", default="all", choices=("all", "sample
 view_parser = subparsers.add_parser("view", help="Visualize a sample, transform, or pipeline")
 view_parser.add_argument("-p1", "--point_1", nargs=2, default=(0, 0), help="x y coordinates of  to extract")
 view_parser.add_argument("-p2", "--point_2", nargs=2, default=(np.inf, np.inf))
-view_parser.add_argument("-od", "--output_dir", default=".", type=os.path.abspath)
-view_parser.add_argument("-sid", "--sample_ids", nargs="+", type=os.path.abspath)
+view_parser.add_argument("-od", "--output_dir", default=".")
+view_parser.add_argument("-sid", "--sample_ids", nargs="+")
 view_parser.add_argument("-of", "--output_filetype", default="png")
 view_parser.add_argument("-sb", "--spectral_band", type=float, required=True)
 
