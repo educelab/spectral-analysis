@@ -112,3 +112,6 @@ dmypy.json
 # Pycharm project settings
 .idea
 .DS_Store
+
+# Singularity built containers
+*.sif
