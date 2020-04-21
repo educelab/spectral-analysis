@@ -5,7 +5,7 @@ from tqdm import tqdm
 import numpy as np
 import imageio
 
-from spectral_data_io import SpectralDataHandler
+from spectral_analysis.spectral_io import SpectralDataHandler
 
 
 def get_data_paths(f_name):

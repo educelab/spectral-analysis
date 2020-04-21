@@ -10,7 +10,7 @@ setup(
     long_description=long_desc,
     long_description_content_type='text/markdown',
     packages=["spectral_analysis"],
-    install_requires=['imageio', 'numpy'],
+    install_requires=['imageio', 'numpy', 'scikit-learn', 'matplotlib', 'joblib', 'tqdm', 'torch'],
     entry_points={"console_scripts": [
         "spctrl_manager = spectral_analysis.scripts.spctrl_manager:main"
     ]}
