@@ -4,7 +4,7 @@ import imageio
 import numpy as np
 from joblib import dump, load
 from sklearn.decomposition import IncrementalPCA, PCA
-from spectral_analysis.spectral_io import SpectralDataHandler
+from spectral_analysis.io import SpectralDataHandler
 
 
 def get_training_data_paths(f_name):

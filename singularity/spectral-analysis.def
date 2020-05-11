@@ -26,7 +26,6 @@ From: python:3
   pip3 install --upgrade pip
 
   # Clone the spectral analysis source from GitLab
-  # TODO, figure out how to get this clone setup with ssh so an auto update can be written into the runscript
   git clone https://code.cs.uky.edu/seales-research/spectral-analysis.git
 
   # Switch to dev branch

@@ -6,7 +6,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
-from spectral_data_io import SpectralDataHandler
+from spectral_analysis.io import SpectralDataHandler
 
 
 def get_training_data_paths(f_name):

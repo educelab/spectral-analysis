@@ -10,8 +10,9 @@ import torch.distributions as distributions
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from spectral_analysis.spectral_io import SpectralDataHandler
 from tqdm import tqdm
+
+from spectral_analysis.io import SpectralDataHandler
 
 
 class TestFullConv(nn.Module):

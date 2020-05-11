@@ -115,3 +115,6 @@ dmypy.json
 
 # Singularity built containers
 *.sif
+
+# Local folder for test data
+test_data/

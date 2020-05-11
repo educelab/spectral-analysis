@@ -6,7 +6,8 @@ import joblib
 import numpy as np
 import pandas as pd
 import torch.nn as nn
-from spectral_io import SpectralDataHandler
+
+from spectral_analysis.io import SpectralDataHandler
 
 
 class TwoLayerAutoEncoder(nn.Module):
