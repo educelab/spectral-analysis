@@ -1,7 +1,5 @@
-import logging
 import os
 import re
-import shutil
 from abc import ABC, abstractmethod
 from struct import unpack_from
 from typing import Tuple
