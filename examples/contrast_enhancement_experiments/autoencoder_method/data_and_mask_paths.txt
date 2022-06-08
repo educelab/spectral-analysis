@@ -1,0 +1,9 @@
+/scratch/dbdo224/2020-hyperspectral/data/2017_07_17_10_25_13/2017_07_17_10_25_13data.hdr,/scratch/dbdo224/2020-hyperspectral/data/2017_07_17_10_25_13/950_683_ink_mask.png
+
+/scratch/dbdo224/2020-hyperspectral/data/2017_07_17_10_50_43/2017_07_17_10_50_43data.hdr,/scratch/dbdo224/2020-hyperspectral/data/2017_07_17_10_50_43/950_683_ink_mask.png
+
+/scratch/dbdo224/2020-hyperspectral/data/2017_07_17_11_17_19/2017_07_17_11_17_19data.hdr,/scratch/dbdo224/2020-hyperspectral/data/2017_07_17_11_17_19/950_683_no_ink_mask.png
+
+/scratch/dbdo224/2020-hyperspectral/data/2017_07_17_11_42_49/2017_07_17_11_42_49data.hdr,/scratch/dbdo224/2020-hyperspectral/data/2017_07_17_11_42_49/950_683__ink_mask.png
+
+/scratch/dbdo224/2020-hyperspectral/data/2017_07_17_12_08_27/2017_07_17_12_08_27data.hdr,/scratch/dbdo224/2020-hyperspectral/data/2017_07_17_12_08_27/950_683_ink_mask.png
