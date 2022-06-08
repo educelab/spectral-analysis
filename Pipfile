@@ -11,8 +11,15 @@ scikit-learn = "*"
 matplotlib = "*"
 progressbar = "*"
 opencv-python = "*"
+imageio = "*"
+tqdm = "*"
+torch = "*"
+spectral-analysis = {editable = true,path = "."}
+pandas = "*"
 
 [dev-packages]
+pytest = "*"
+tox = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"
