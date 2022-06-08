@@ -1,0 +1,14 @@
+h5py
+imageio
+matplotlib
+numpy
+opencv-python
+pandas
+pillow
+progressbar
+pytest
+scikit-learn
+tensorflow
+torch
+tox
+tqdm
