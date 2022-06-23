@@ -1,15 +1,55 @@
 import argparse
 import pickle
+import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import imageio.v2 as iio
 import numpy as np
 from sklearn.decomposition import IncrementalPCA, PCA
 
+SHAPE_REGEX = r"(?P<w>\d+)x(?P<h>\d+)"
+ORIGIN_REGEX = r"\+(?P<x>\d+)\+(?P<y>\d+)"
+ROI_REGEX = SHAPE_REGEX + ORIGIN_REGEX
+SHAPE_REGEX = re.compile(SHAPE_REGEX)
+ORIGIN_REGEX = re.compile(ORIGIN_REGEX)
+ROI_REGEX = re.compile(ROI_REGEX)
+
+
+def parse_roi_params(roi_string: str):
+    # ROI return value
+    @dataclass
+    class ROI:
+        x: int = None
+        y: int = None
+        w: int = None
+        h: int = None
+
+        def __str__(self):
+            return f'(x:{self.x}, y:{self.y}, w:{self.w}, h:{self.h})'
+
+    # Parse the ROI parameters
+    match = ROI_REGEX.match(roi_string)
+    if not match:
+        print(f'Warning: Cannot parse ROI argument: {roi_string}. Ignoring.')
+        return ROI()
+
+    # Convert to ints
+    roi = match.groupdict()
+    convert_error = False
+    for key, value in roi.items():
+        roi[key] = int(value)
+
+    if convert_error:
+        return ROI()
+
+    # Return ROI commands
+    return ROI(roi['x'], roi['y'], roi['w'], roi['h'])
+
 
 def pca_fit(x, components: int = None, batch_size: int = None,
-            incremental: bool = False):
+            incremental: bool = False, roi=None):
     # Validate number of components
     if components is not None and not (1 < components < x.shape[0]):
         print(
@@ -22,6 +62,11 @@ def pca_fit(x, components: int = None, batch_size: int = None,
                              batch_size=batch_size)
     else:
         pca = PCA(n_components=components)
+
+    # Crop training data to ROI
+    if roi is not None:
+        print(f'Using input ROI: {roi}')
+        x = x[:, roi.y:roi.y + roi.h, roi.x:roi.x + roi.w]
 
     # Flatten input
     x_flat = x.reshape((x.shape[0], -1))
@@ -59,6 +104,8 @@ def main():
                                'components.')
     pca_opts.add_argument('--batch-size', type=int, metavar='INT',
                           help='Batch size for incremental PCA')
+    pca_opts.add_argument('--roi', type=str,
+                          help='ROI used to calculate PCA: WxH+X+Y')
     pca_opts.add_argument('--save-pca', metavar='FILE.pickle',
                           help='Save a pickled PCA instance to a file')
     pca_opts.add_argument('--load-pca', metavar='FILE.pickle',
@@ -95,10 +142,15 @@ def main():
         with Path(args.load_pca).open('rb') as file:
             pca = pickle.load(file)
     else:
+        # Get ROI parameters
+        roi = None
+        if args.roi is not None:
+            roi = parse_roi_params(args.roi)
         pca = pca_fit(images,
                       components=args.components,
                       batch_size=args.batch_size,
-                      incremental=args.incremental)
+                      incremental=args.incremental,
+                      roi=roi)
 
     # Save the PCA file
     if args.save_pca is not None:
