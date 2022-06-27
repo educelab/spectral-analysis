@@ -78,6 +78,19 @@ def pca_fit(x, components: int = None, batch_size: int = None,
     return pca
 
 
+def pca_apply_transform(x, pca):
+    # Transform images
+    print(f'Transforming {x.shape[0]} images...')
+    x_flat = x.reshape((x.shape[0], -1))
+    x_flat = np.swapaxes(x_flat, 0, 1)
+    x_flat = pca.transform(x_flat)
+
+    # Convert back to images
+    x_flat = np.swapaxes(x_flat, 0, 1)
+    pca_shape = (pca.n_components_,) + x.shape[1:]
+    return x_flat.reshape(pca_shape)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Run PCA on a set of images')
     parser.add_argument('--input-images', '-i', nargs='+', metavar='IMAGE',
@@ -177,15 +190,7 @@ def main():
         transform_images = np.array(transform_images)
 
     # Transform images
-    print(f'Transforming {transform_images.shape[0]} images...')
-    transformed_flat = transform_images.reshape((transform_images.shape[0], -1))
-    transformed_flat = np.swapaxes(transformed_flat, 0, 1)
-    transformed_flat = pca.transform(transformed_flat)
-
-    # Convert back to images
-    transformed_flat = np.swapaxes(transformed_flat, 0, 1)
-    pca_shape = (components,) + transform_images.shape[1:]
-    transformed_images = transformed_flat.reshape(pca_shape)
+    transformed_images = pca_apply_transform(transform_images, pca)
 
     # Save all images
     print('Saving images...')
