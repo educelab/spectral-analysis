@@ -16,6 +16,13 @@ SHAPE_REGEX = re.compile(SHAPE_REGEX)
 ORIGIN_REGEX = re.compile(ORIGIN_REGEX)
 ROI_REGEX = re.compile(ROI_REGEX)
 
+__PRINT_PROGRESS: bool = True
+
+
+def enable_print_progress(enabled: bool = True):
+    global __PRINT_PROGRESS
+    __PRINT_PROGRESS = enabled
+
 
 def parse_roi_params(roi_string: str):
     # ROI return value
@@ -52,8 +59,8 @@ def pca_fit(x, components: int = None, batch_size: int = None,
             incremental: bool = False, roi=None):
     # Validate number of components
     if components is not None and not (1 < components < x.shape[0]):
-        print(
-            f'Error: Requested components ({components}) outside range [1, {x.shape[0]}]')
+        print(f'Error: Requested components ({components}) outside '
+              f'range [1, {x.shape[0]}]')
         sys.exit(1)
 
     # Setup new PCA
@@ -65,7 +72,8 @@ def pca_fit(x, components: int = None, batch_size: int = None,
 
     # Crop training data to ROI
     if roi is not None:
-        print(f'Using input ROI: {roi}')
+        if __PRINT_PROGRESS:
+            print(f'Using input ROI: {roi}')
         x = x[:, roi.y:roi.y + roi.h, roi.x:roi.x + roi.w]
 
     # Flatten input
@@ -73,14 +81,16 @@ def pca_fit(x, components: int = None, batch_size: int = None,
     x_flat = np.swapaxes(x_flat, 0, 1)
 
     # Fit input files
-    print(f'Fitting {x.shape[0]} images...')
+    if __PRINT_PROGRESS:
+        print(f'Fitting {x.shape[0]} images...')
     pca.fit(x_flat)
     return pca
 
 
 def pca_apply_transform(x, pca):
     # Transform images
-    print(f'Transforming {x.shape[0]} images...')
+    if __PRINT_PROGRESS:
+        print(f'Transforming {x.shape[0]} images...')
     x_flat = x.reshape((x.shape[0], -1))
     x_flat = np.swapaxes(x_flat, 0, 1)
     x_flat = pca.transform(x_flat)
