@@ -2,8 +2,10 @@ from math import sqrt
 import imageio.v2 as iio
 import numpy as np
 from pathlib import Path
+import sklearn
+import argparse
 
-def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None):
+def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None) -> sklearn:
     n_features = images_flat.shape[0]
     if n_features <= 10000:
         print(f'Using KMeans')
@@ -23,6 +25,18 @@ def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, 
     return kmeans
 
 def main():
+    parser = argparse.ArgumentParser(description='Run KMeans for segmentation on a set of images')
+    parser.add_argument('--input-images', '-i', nargs='+', metavar='IMAGE',
+                        help='List of input image files. All images must have '
+                             'the same dimensions. Supports 8, 16, and 32-bit '
+                             'grayscale images')
+    parser.add_argument('--output-image-name', '-o', default='sample', metavar='FILE',
+                        help='Output segmented image name')
+    parser.add_argument('--output-image-extension', '-ext', default='tif', metavar='EXT',
+                        help='Output segmented image extension', choices=['TIF', 'PNG', 'JPG', 'JPEG'])
+    parser.add_argument('--batch-size', '-b', default=None, metavar='INT',
+                        help='Batch size Integer value. Default is sqrt(W*H*B)', choices=range(1,))
+    args = parser.parse_args()
     n_clusters=5
     data = Path(f'data/HolyTrinity_01v_Test/pca_seg/')
     files = [x for x in data.iterdir()]
