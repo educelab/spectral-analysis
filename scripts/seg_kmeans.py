@@ -54,8 +54,6 @@ def main():
         sys.exit(1)
     
     n_clusters=args.number_of_clusters
-    # data = Path(f'data/HolyTrinity_01v_Test/pca_seg/')
-    # files = [x for x in data.iterdir()]
     files = args.input_images
     images = list()
     for imagefile in files:
