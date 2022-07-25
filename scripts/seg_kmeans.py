@@ -3,7 +3,7 @@ import imageio.v2 as iio
 import numpy as np
 from pathlib import Path
 
-def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0):
+def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None):
     n_features = images_flat.shape[0]
     if n_features <= 10000:
         print(f'Using KMeans')
@@ -12,14 +12,17 @@ def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0):
     else:
         from sklearn.cluster import MiniBatchKMeans
         print(f'Using MiniBatchKMeans')
-        n_batch_size = round(sqrt(images_flat.shape[0]*images_flat.shape[1]))
+        if batch_size == None:
+            n_batch_size = round(sqrt(images_flat.shape[0]*images_flat.shape[1]))
+        else:
+            n_batch_size = batch_size
+            
         kmeans = MiniBatchKMeans(n_clusters=n_clusters, random_state=0, batch_size=n_batch_size)
     
     kmeans.fit(images_flat)
     return kmeans
 
 def main():
-    n_batch_size=1000
     n_clusters=5
     data = Path(f'data/HolyTrinity_01v_Test/pca_seg/')
     files = [x for x in data.iterdir()]
