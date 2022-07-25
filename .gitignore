@@ -123,3 +123,4 @@ dmypy.json
 test_data/
 scripts/data/
 scripts/archieve/
+scripts/*.tif
