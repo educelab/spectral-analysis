@@ -29,14 +29,17 @@ def main():
     parser.add_argument('--input-images', '-i', nargs='+', metavar='IMAGE',
                         help='List of input image files. All images must have '
                              'the same dimensions. Supports 8, 16, and 32-bit '
-                             'grayscale images')
+                             'grayscale images', required=True)
     parser.add_argument('--output-image-name', '-o', default='sample', metavar='FILE',
                         help='Output segmented image name')
-    parser.add_argument('--output-image-extension', '-ext', default='tif', metavar='EXT',
+    parser.add_argument('--output-image-extension', '-ext', default='tif', metavar='EXT', type=str.lower,
                         help='Output segmented image extension', choices=['TIF', 'PNG', 'JPG', 'JPEG'])
     parser.add_argument('--batch-size', '-b', default=None, metavar='INT',
-                        help='Batch size Integer value. Default is sqrt(W*H*B)', choices=range(1,))
+                        help='Batch size Integer value. Default is sqrt(W*H*B).', choices=range(1,))
+    parser.add_argument('--number-of-clusters', '-c', default=None, metavar='INT',
+                        help='Number of clusters.', choices=range(1,), required=True)
     args = parser.parse_args()
+    
     n_clusters=5
     data = Path(f'data/HolyTrinity_01v_Test/pca_seg/')
     files = [x for x in data.iterdir()]
