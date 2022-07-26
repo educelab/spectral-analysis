@@ -55,7 +55,7 @@ def main():
         sys.exit(1)
     
     
-    if args.batch_size <= 1:
+    if args.batch_size != None and args.batch_size <= 1:
         print(f'Batch size found {args.batch_size}. Required >=1')
         sys.exit(1)
     
