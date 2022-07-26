@@ -1,12 +1,21 @@
 from math import sqrt
 import imageio.v2 as iio
 import numpy as np
-from pathlib import Path
 import sklearn
 import argparse
 import sys
 
 def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None) -> sklearn:
+    '''
+    Fit image to kmeans.
+    Inputs:
+            images_flat: Flattened PCA bands. Provide all the bands.
+            n_clusters: Number of clusters.
+            random_state: Seeding purpose.
+            batch_size: Batch size. Provide if number of features >=10000.
+    Output:
+            kmeans: Kmeans object
+    '''
     n_features = images_flat.shape[0]
     if n_features <= 10000:
         print(f'Using KMeans')
@@ -35,10 +44,6 @@ def main():
                              'grayscale images', required=True)
     parser.add_argument('--output-image', '-o', default='sample.tif', metavar='FILE',
                         help='Output segmented image name')
-    # parser.add_argument('--output-image-name', '-o', default='sample', metavar='FILE',
-    #                     help='Output segmented image name')
-    # parser.add_argument('--output-image-extension', '-ext', default='tif', metavar='EXT', type=str.lower,
-    #                     help='Output segmented image extension', choices=['TIF', 'PNG', 'JPG', 'JPEG'])
     parser.add_argument('--batch-size', '-b', default=None, metavar='INT', type=int,
                         help='Batch size Integer value. Default is sqrt(W*H*B).')
     parser.add_argument('--number-of-clusters', '-c', metavar='INT', type=int,
@@ -48,7 +53,8 @@ def main():
     if args.number_of_clusters <= 1:
         print(f'Cluster size found {args.number_of_clusters}. Required >=2')
         sys.exit(1)
-        
+    
+    
     if args.batch_size <= 1:
         print(f'Batch size found {args.batch_size}. Required >=1')
         sys.exit(1)
@@ -63,16 +69,20 @@ def main():
     images_flat = images.reshape(images.shape[0], -1) # (c, w, h) -> (c, w*h)
     images_flat = np.swapaxes(images_flat, 0, 1) # (c, w*h) -> (w*h, c)
     
-    
+    # Perform kmeans
     kmeans = kmeans_fit(images_flat, n_clusters=n_clusters, batch_size=args.batch_size)
     
+    # make a flattened numpy array
     flat_seg = np.array(kmeans.labels_)
     
+    #Number of clusters and its labels
     print(f'unique cluster labels: {np.unique(flat_seg)}')
     
     final_image = flat_seg.reshape(images.shape[1], images.shape[2])
     print(final_image)
     print(final_image.shape)
+    
+    #Saving the image. By default it is float 32 format
     iio.imwrite(f'{args.output_image}', final_image)
     
     
