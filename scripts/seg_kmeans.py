@@ -11,7 +11,16 @@ SUB_REGEX = r"(?P<h>\d+)x(?P<w>\d+)"
 SUB_REGEX = re.compile(SUB_REGEX)
 
 
-def parse_subdiv_params(sub_dim: str):
+def parse_subdiv_params(sub_dim: str) -> tuple():
+    '''
+    Parse regexp for string HxW.
+    Inputs:
+            sub_dim: Dimension string for subdivision. Like 4x4, 3x3, 5x5, etc.
+    Output:
+            sub['h']: Number of subdivision along the height of the image.
+            sub['w']: Number of subdivision along the width of the image.
+            
+    '''
     match = SUB_REGEX.match(sub_dim)
     if not match:
         print(f'Subdivision dimension cannot be matched.')
