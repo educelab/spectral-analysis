@@ -105,9 +105,8 @@ def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, su
             else:
                 subimages.append(images[:,h*del_h:(h+1)*del_h, w*del_w:(w+1)*del_w])
     
-    # print(len(subimages))
-    for i in range(len(subimages)):
-        iio.imwrite(f'sub/sub_img_{i}.tif', subimages[i][0])
+    # for i in range(len(subimages)):
+    #     iio.imwrite(f'sub/sub_img_{i}.tif', subimages[i][0])
     
     # Apply kmeans on each subdivided image
     sub_seg = list()
@@ -115,13 +114,26 @@ def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, su
         sub_seg.append(segment_image(images=subimg, n_clusters=n_clusters, batch_size=n_batch))
         
     # Draw images for testing
-    for i in range(len(sub_seg)):
-        iio.imwrite(f'sub/sub_seg_img_{i}.tif', sub_seg[i])
+    # for i in range(len(sub_seg)):
+    #     iio.imwrite(f'sub/sub_seg_img_{i}.tif', sub_seg[i])
         
-    return None
+    return stitch_images(image_list=sub_seg, sub_h=sub_h, sub_w=sub_w)
     
     
-    
+def stitch_images(image_list: list(), sub_h: int, sub_w: int) -> np.ndarray:
+    final_image = list()
+    for i in range(sub_h):
+        temp_list = list()
+        for j in range(sub_w):
+            temp_list.append(j + (i*sub_w))
+        final_image.append(temp_list)
+        
+    print(f'final_image: {final_image}')
+    for rows in final_image:
+        for cols in rows:
+            print(f'cols: {cols}, type-cols: {type(cols)}, type-image_list[cols]: {type(image_list[cols])}, len-imlist: {len(image_list)}')
+            rows[cols%sub_w] = image_list[cols]
+    return np.array(final_image)
 
 def segment_image(images: np.ndarray, n_clusters: int, batch_size: int = None) -> np.ndarray:
     '''
@@ -204,14 +216,15 @@ def main():
         (sub_h, sub_w) = parse_subdiv_params(args.subdivision_dimension)
         print(f'sub_h {sub_h}, sub_w: {sub_w}')
         print(f'Using Subdivision')
-        segment_subdivision(images=images, n_clusters=n_clusters, n_batch=n_batch, sub_h=sub_h, sub_w=sub_w)
+        final_image = segment_subdivision(images=images, n_clusters=n_clusters, n_batch=n_batch, sub_h=sub_h, sub_w=sub_w)
     else:
         print(f'Not using Subdivision')
         final_image = segment_image(images=images, n_clusters=n_clusters)
     
+    print(f'Shape of the final_image: {final_image.shape}')
     
     #Saving the image. By default it is float 32 format
-    # iio.imwrite(f'{args.output_image}', final_image)
+    iio.imwrite(f'{args.output_image}', final_image)
     
     
 if __name__ == "__main__":
