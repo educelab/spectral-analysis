@@ -36,6 +36,32 @@ def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, 
     kmeans.fit(images_flat)
     return kmeans
 
+def flatten_image(images: np.ndarray) -> np.array :
+    
+    images_flat = images.reshape(images.shape[0], -1) # (c, w, h) -> (c, w*h)
+    images_flat = np.swapaxes(images_flat, 0, 1) # (c, w*h) -> (w*h, c)
+    
+    return images_flat
+
+def segment_image(images: np.ndarray, n_clusters: int, batch_size: int = None) -> np.ndarray:
+    
+    images_flat = flatten_image(images=images)
+    
+    # Perform kmeans
+    kmeans = kmeans_fit(images_flat, n_clusters=n_clusters, batch_size=batch_size)
+    
+    # make a flattened numpy array
+    flat_seg = np.array(kmeans.labels_)
+    
+    #Number of clusters and its labels
+    print(f'unique cluster labels: {np.unique(flat_seg)}')
+    
+    final_image = flat_seg.reshape(images.shape[1], images.shape[2])
+    print(final_image)
+    print(final_image.shape)
+    
+    return final_image
+
 def main():
     parser = argparse.ArgumentParser(description='Run KMeans for segmentation on a set of images')
     parser.add_argument('--input-images', '-i', nargs='+', metavar='IMAGE',
@@ -66,21 +92,8 @@ def main():
         images.append(iio.imread(imagefile))
     images = np.array(images)
     
-    images_flat = images.reshape(images.shape[0], -1) # (c, w, h) -> (c, w*h)
-    images_flat = np.swapaxes(images_flat, 0, 1) # (c, w*h) -> (w*h, c)
-    
-    # Perform kmeans
-    kmeans = kmeans_fit(images_flat, n_clusters=n_clusters, batch_size=args.batch_size)
-    
-    # make a flattened numpy array
-    flat_seg = np.array(kmeans.labels_)
-    
-    #Number of clusters and its labels
-    print(f'unique cluster labels: {np.unique(flat_seg)}')
-    
-    final_image = flat_seg.reshape(images.shape[1], images.shape[2])
-    print(final_image)
-    print(final_image.shape)
+    # Perform segmentation
+    final_image = segment_image(images=images, n_clusters=n_clusters)
     
     #Saving the image. By default it is float 32 format
     iio.imwrite(f'{args.output_image}', final_image)
