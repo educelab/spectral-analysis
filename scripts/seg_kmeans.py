@@ -76,7 +76,7 @@ def flatten_image(images: np.ndarray) -> np.array :
     
     return images_flat
 
-def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, sub_w: int = 4, n_batch: int = None):
+def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, sub_w: int = 4, n_batch: int = None) -> np.ndarray:
     '''
     Perform segmentation on subdivision.
     Inputs:
