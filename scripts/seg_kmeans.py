@@ -93,21 +93,9 @@ def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, su
     width = images.shape[2]
     del_h = height//sub_h
     del_w = width//sub_w
-    
     for h in range(sub_h):
         for w in range(sub_w):
-            if ((h == sub_h-1) and (w != sub_w-1)):
-                subimages.append(images[:,h*del_h:height, w*del_w:(w+1)*del_w])
-            elif ((w == sub_w-1) and (h != sub_h-1)):
-                subimages.append(images[:,h*del_h:(h+1)*del_h, w*del_w:width])
-            elif ((h == sub_h-1) and (w == sub_w-1)):
-                subimages.append(images[:,h*del_h:height, w*del_w:width])
-            else:
-                subimages.append(images[:,h*del_h:(h+1)*del_h, w*del_w:(w+1)*del_w])
-    
-    # for i in range(len(subimages)):
-    #     iio.imwrite(f'sub/sub_img_{i}.tif', subimages[i][0])
-    
+            subimages.append(images[:,h*del_h:min((h+1)*del_h, height), w*del_w:min((w+1)*del_w, width)])
     # Apply kmeans on each subdivided image
     sub_seg = list()
     for subimg in subimages:
@@ -130,6 +118,7 @@ def stitch_images(image_list: list(), sub_h: int, sub_w: int, height: int, width
     del_h = height//sub_h
     del_w = width//sub_w
     stitched_image = np.zeros((height, width))
+    print(f'shape of stitched output: {stitched_image.shape}')
     for i in range(sub_h):
         for j in range(sub_w):
             stitched_image[i*del_h:(i+1)*del_h, j*del_w:(j+1)*del_w] = image_list[(i*sub_w)+j]
