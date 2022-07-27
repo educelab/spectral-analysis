@@ -91,20 +91,28 @@ def main():
                         help='Number of clusters. Min. 2.', required=True)
     args = parser.parse_args()
     
+    # Validation for number of k-means clusters.
     if args.number_of_clusters <= 1:
         print(f'Cluster size found {args.number_of_clusters}. Required >=2')
         sys.exit(1)
     
-    
+    # Validation for number of batches provided.
     if args.batch_size != None and args.batch_size <= 1:
         print(f'Batch size found {args.batch_size}. Required >=1')
         sys.exit(1)
     
+    # Initialising number fo kmeans cluster provided by the user.
     n_clusters=args.number_of_clusters
+    
+    # Initialising the file paths to be used for segmentation
     files = args.input_images
+    
+    # Making a list to store images from all the provided bands.
     images = list()
     for imagefile in files:
         images.append(iio.imread(imagefile))
+    
+    # Converting the list of images to numpy array (1D Array)
     images = np.array(images)
     
     # Perform segmentation
