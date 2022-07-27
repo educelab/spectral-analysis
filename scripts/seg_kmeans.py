@@ -1,4 +1,5 @@
 from math import sqrt
+from typing import final
 import imageio.v2 as iio
 import numpy as np
 import sklearn
@@ -48,6 +49,43 @@ def flatten_image(images: np.ndarray) -> np.array :
     images_flat = np.swapaxes(images_flat, 0, 1) # (c, w*h) -> (w*h, c)
     
     return images_flat
+
+def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, sub_w: int = 4, n_batch: int = None):
+    subimages = list()
+    channels = images.shape[0]
+    height = images.shape[1]
+    width = images.shape[2]
+    del_h = height//sub_h
+    del_w = width//sub_w
+    
+    for h in range(sub_h):
+        for w in range(sub_w):
+            if ((h == sub_h-1) and (w != sub_w-1)):
+                subimages.append(images[:,h*del_h:height, w*del_w:(w+1)*del_w])
+            elif ((w == sub_w-1) and (h != sub_h-1)):
+                subimages.append(images[:,h*del_h:(h+1)*del_h, w*del_w:width])
+            elif ((h == sub_h-1) and (w == sub_w-1)):
+                subimages.append(images[:,h*del_h:height, w*del_w:width])
+            else:
+                subimages.append(images[:,h*del_h:(h+1)*del_h, w*del_w:(w+1)*del_w])
+    
+    # print(len(subimages))
+    for i in range(len(subimages)):
+        iio.imwrite(f'sub_img_{i}.tif', subimages[i][0])
+    
+    # Apply kmeans on each subdivided image
+    sub_seg = list()
+    for subimg in subimages:
+        sub_seg.append(segment_image(images=subimg, n_clusters=n_clusters))
+        
+    # Draw images for testing
+    for i in range(len(sub_seg)):
+        iio.imwrite(f'sub_seg_img_{i}.tif', sub_seg[i])
+        
+    return None
+    
+    
+    
 
 def segment_image(images: np.ndarray, n_clusters: int, batch_size: int = None) -> np.ndarray:
     '''
@@ -104,6 +142,9 @@ def main():
     # Initialising number fo kmeans cluster provided by the user.
     n_clusters=args.number_of_clusters
     
+    # Initialising batch size.
+    n_batch=args.batch_size
+    
     # Initialising the file paths to be used for segmentation
     files = args.input_images
     
@@ -116,10 +157,11 @@ def main():
     images = np.array(images)
     
     # Perform segmentation
-    final_image = segment_image(images=images, n_clusters=n_clusters)
+    # final_image = segment_image(images=images, n_clusters=n_clusters)
+    segment_subdivision(images=images, n_clusters=n_clusters, n_batch=n_batch)
     
     #Saving the image. By default it is float 32 format
-    iio.imwrite(f'{args.output_image}', final_image)
+    # iio.imwrite(f'{args.output_image}', final_image)
     
     
 if __name__ == "__main__":
