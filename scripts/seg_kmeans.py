@@ -77,8 +77,18 @@ def flatten_image(images: np.ndarray) -> np.array :
     return images_flat
 
 def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, sub_w: int = 4, n_batch: int = None):
+    '''
+    Perform segmentation on subdivision.
+    Inputs:
+            images: Full images from the PCA bands.
+            n_clusters: Number of clusters.
+            sub_h: Number of subdivision along the height.
+            sub_w: Number of subdivision along the width.
+            n_batch: Batch size. Provide if number of features >=10000.
+    Output:
+            final_image: Finally clustered and stitched image.
+    '''
     subimages = list()
-    channels = images.shape[0]
     height = images.shape[1]
     width = images.shape[2]
     del_h = height//sub_h
