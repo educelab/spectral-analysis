@@ -37,14 +37,29 @@ def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, 
     return kmeans
 
 def flatten_image(images: np.ndarray) -> np.array :
-    
+    '''
+    Flatten image.
+    Inputs:
+            images: Images of PCA bands.
+    Output:
+            images_flat: Flattened image numpy array.
+    '''
     images_flat = images.reshape(images.shape[0], -1) # (c, w, h) -> (c, w*h)
     images_flat = np.swapaxes(images_flat, 0, 1) # (c, w*h) -> (w*h, c)
     
     return images_flat
 
 def segment_image(images: np.ndarray, n_clusters: int, batch_size: int = None) -> np.ndarray:
-    
+    '''
+    Segment image using KMeans.
+    Inputs:
+            images: Images of PCA bands.
+            n_clusters: Number of clusters.
+            batch_size: Batch size. Provide if number of features >=10000.
+    Output:
+            final_image: Segmented image in numpy array.
+    '''
+    # Flatten image
     images_flat = flatten_image(images=images)
     
     # Perform kmeans
