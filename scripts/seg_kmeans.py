@@ -1,10 +1,14 @@
 from math import sqrt
+import re
 from typing import final
 import imageio.v2 as iio
 import numpy as np
 import sklearn
 import argparse
 import sys
+
+SUB_REGEX = re.compile(r"(?P<w>\d+)x(?P<h>\d+)")
+
 
 def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None) -> sklearn:
     '''
@@ -71,7 +75,7 @@ def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, su
     
     # print(len(subimages))
     for i in range(len(subimages)):
-        iio.imwrite(f'sub_img_{i}.tif', subimages[i][0])
+        iio.imwrite(f'sub/sub_img_{i}.tif', subimages[i][0])
     
     # Apply kmeans on each subdivided image
     sub_seg = list()
@@ -80,7 +84,7 @@ def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, su
         
     # Draw images for testing
     for i in range(len(sub_seg)):
-        iio.imwrite(f'sub_seg_img_{i}.tif', sub_seg[i])
+        iio.imwrite(f'sub/sub_seg_img_{i}.tif', sub_seg[i])
         
     return None
     
@@ -127,6 +131,10 @@ def main():
                         help='Batch size Integer value. Default is sqrt(W*H*B).')
     parser.add_argument('--number-of-clusters', '-c', metavar='INT', type=int,
                         help='Number of clusters. Min. 2.', required=True)
+    parser.add_argument('--subdivide', action='store_true',
+                        help='If you want to divide the whole image into MxN grid and run segmentation on each of the grid and finally stitch it. Default is 4x4.')
+    parser.add_argument('--subdivision-dimension', '-s', type=str,
+                        help='Calculate the number of subdivision HxW. Default is 4x4.', default='4x4')
     args = parser.parse_args()
     
     # Validation for number of k-means clusters.
@@ -145,6 +153,9 @@ def main():
     # Initialising batch size.
     n_batch=args.batch_size
     
+    # Initialise subdivision flag
+    is_subdivide = args.subdivide
+    
     # Initialising the file paths to be used for segmentation
     files = args.input_images
     
@@ -157,8 +168,13 @@ def main():
     images = np.array(images)
     
     # Perform segmentation
-    # final_image = segment_image(images=images, n_clusters=n_clusters)
-    segment_subdivision(images=images, n_clusters=n_clusters, n_batch=n_batch)
+    if is_subdivide:
+        print(f'Using Subdivision')
+        segment_subdivision(images=images, n_clusters=n_clusters, n_batch=n_batch, sub_h=6, sub_w=6)
+    else:
+        print(f'Not using Subdivision')
+        final_image = segment_image(images=images, n_clusters=n_clusters)
+    
     
     #Saving the image. By default it is float 32 format
     # iio.imwrite(f'{args.output_image}', final_image)
