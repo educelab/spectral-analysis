@@ -112,28 +112,28 @@ def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, su
     sub_seg = list()
     for subimg in subimages:
         sub_seg.append(segment_image(images=subimg, n_clusters=n_clusters, batch_size=n_batch))
-        
-    # Draw images for testing
-    # for i in range(len(sub_seg)):
-    #     iio.imwrite(f'sub/sub_seg_img_{i}.tif', sub_seg[i])
-        
-    return stitch_images(image_list=sub_seg, sub_h=sub_h, sub_w=sub_w)
+    return stitch_images(image_list=sub_seg, sub_h=sub_h, sub_w=sub_w, height=height, width=width)
     
     
-def stitch_images(image_list: list(), sub_h: int, sub_w: int) -> np.ndarray:
-    final_image = list()
+def stitch_images(image_list: list(), sub_h: int, sub_w: int, height: int, width: int) -> np.ndarray:
+    '''
+    Perform segmentation on subdivision.
+    Inputs:
+            image_list: List of locally segmented images.
+            sub_h: Number of subdivision along the height.
+            sub_w: Number of subdivision along the width.
+            height: Height of the original un-subdivided image.
+            width: Width of the original un-subdivided image.
+    Output:
+            stitched_image: Stitched image mosaic.
+    '''
+    del_h = height//sub_h
+    del_w = width//sub_w
+    stitched_image = np.zeros((height, width))
     for i in range(sub_h):
-        temp_list = list()
         for j in range(sub_w):
-            temp_list.append(j + (i*sub_w))
-        final_image.append(temp_list)
-        
-    print(f'final_image: {final_image}')
-    for rows in final_image:
-        for cols in rows:
-            print(f'cols: {cols}, type-cols: {type(cols)}, type-image_list[cols]: {type(image_list[cols])}, len-imlist: {len(image_list)}')
-            rows[cols%sub_w] = image_list[cols]
-    return np.array(final_image)
+            stitched_image[i*del_h:(i+1)*del_h, j*del_w:(j+1)*del_w] = image_list[(i*sub_w)+j]
+    return stitched_image
 
 def segment_image(images: np.ndarray, n_clusters: int, batch_size: int = None) -> np.ndarray:
     '''
@@ -172,7 +172,7 @@ def main():
     parser.add_argument('--output-image', '-o', default='sample.tif', metavar='FILE',
                         help='Output segmented image name')
     parser.add_argument('--batch-size', '-b', default=None, metavar='INT', type=int,
-                        help='Batch size Integer value. Default is sqrt(W*H*B).')
+                        help='Batch size Integer value. Default is sqrt(H*W*B).')
     parser.add_argument('--number-of-clusters', '-c', metavar='INT', type=int,
                         help='Number of clusters. Min. 2.', required=True)
     parser.add_argument('--subdivide', action='store_true',
