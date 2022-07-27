@@ -7,8 +7,21 @@ import sklearn
 import argparse
 import sys
 
-SUB_REGEX = re.compile(r"(?P<w>\d+)x(?P<h>\d+)")
+SUB_REGEX = r"(?P<h>\d+)x(?P<w>\d+)"
+SUB_REGEX = re.compile(SUB_REGEX)
 
+
+def parse_subdiv_params(sub_dim: str):
+    match = SUB_REGEX.match(sub_dim)
+    if not match:
+        print(f'Subdivision dimension cannot be matched.')
+        return
+    sub = match.groupdict()
+    for key, value in sub.items():
+        sub[key] = int(value)
+    
+    return sub['h'], sub['w']
+    
 
 def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None) -> sklearn:
     '''
@@ -80,7 +93,7 @@ def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, su
     # Apply kmeans on each subdivided image
     sub_seg = list()
     for subimg in subimages:
-        sub_seg.append(segment_image(images=subimg, n_clusters=n_clusters))
+        sub_seg.append(segment_image(images=subimg, n_clusters=n_clusters, batch_size=n_batch))
         
     # Draw images for testing
     for i in range(len(sub_seg)):
@@ -169,8 +182,10 @@ def main():
     
     # Perform segmentation
     if is_subdivide:
+        (sub_h, sub_w) = parse_subdiv_params(args.subdivision_dimension)
+        print(f'sub_h {sub_h}, sub_w: {sub_w}')
         print(f'Using Subdivision')
-        segment_subdivision(images=images, n_clusters=n_clusters, n_batch=n_batch, sub_h=6, sub_w=6)
+        segment_subdivision(images=images, n_clusters=n_clusters, n_batch=n_batch, sub_h=sub_h, sub_w=sub_w)
     else:
         print(f'Not using Subdivision')
         final_image = segment_image(images=images, n_clusters=n_clusters)
