@@ -1,6 +1,5 @@
 from math import sqrt
 import re
-from typing import final
 import imageio.v2 as iio
 import numpy as np
 import sklearn
@@ -32,7 +31,7 @@ def parse_subdiv_params(sub_dim: str) -> tuple():
     return sub['h'], sub['w']
     
 
-def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None) -> sklearn:
+def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None) -> sklearn :
     '''
     Fit image to kmeans.
     Inputs:
@@ -76,7 +75,7 @@ def flatten_image(images: np.ndarray) -> np.array :
     
     return images_flat
 
-def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, sub_w: int = 4, n_batch: int = None) -> np.ndarray:
+def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, sub_w: int = 4, n_batch: int = None) -> np.ndarray :
     '''
     Perform segmentation on subdivision.
     Inputs:
