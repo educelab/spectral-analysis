@@ -9,6 +9,32 @@ import sys
 SUB_REGEX = r"(?P<h>\d+)x(?P<w>\d+)"
 SUB_REGEX = re.compile(SUB_REGEX)
 
+ROI_REGEX = r"(?P<x1>\d+)x(?P<y1>\d+)\+(?P<x2>\d+)x(?P<y2>\d+)"
+ROI_REGEX = re.compile(ROI_REGEX)
+
+def parse_roi_params(roi_dim: str) -> tuple():
+    '''
+    Parse ROI regexp for string X1xY1+X2xY2.
+    Inputs:
+            roi_dim: Dimension string for ROI. Like 100x200+1000x2000, etc.
+    Output:
+            roi['x1']: Left top corner X-Coordinate.
+            roi['y1']: Left top corner Y-Coordinate.
+            roi['x2']: Right bottom corner X-Coordinate.
+            roi['y2']: Right bottom corner Y-Coordinate.
+            
+    '''
+    print(f'Recieved: {roi_dim}')
+    match = ROI_REGEX.match(roi_dim)
+    if not match:
+        print(f'ROI dimension cannot be matched.')
+        return
+    roi = match.groupdict()
+    print(f'ROI: {roi}')
+    for key, value in roi.items():
+        roi[key] = int(value)
+    print(f'ROI: {roi}')
+    return roi['x1'], roi['y1'], roi['x2'], roi['y2']
 
 def parse_subdiv_params(sub_dim: str) -> tuple():
     '''
@@ -59,7 +85,6 @@ def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, 
         else:
             n_batch_size = batch_size
             print(f'Using custom batch_size of {n_batch_size}')
-            
         kmeans = MiniBatchKMeans(n_clusters=n_clusters, random_state=0, batch_size=n_batch_size)
     
     kmeans.fit(images_flat)
@@ -170,6 +195,8 @@ def main():
                         help='If you want to divide the whole image into MxN grid and run segmentation on each of the grid and finally stitch it. Default is 4x4.')
     parser.add_argument('--subdivision-dimension', '-s', type=str,
                         help='Calculate the number of subdivision HxW. Default is 4x4.', default='4x4')
+    parser.add_argument('--roi', type=str,
+                          help='ROI used to calculate PCA: X1xY1+X2xY2')
     args = parser.parse_args()
     
     # Validation for number of k-means clusters.
@@ -196,8 +223,11 @@ def main():
     
     # Making a list to store images from all the provided bands.
     images = list()
-    for imagefile in files:
-        images.append(iio.imread(imagefile))
+    print(f'args-roi: {args.roi}')
+    if args.roi is not None:
+        (x1, y1, x2, y2) = parse_roi_params(args.roi)
+        for imagefile in files:
+            images.append(iio.imread(imagefile)[y1:y2, x1:x2])
     
     # Converting the list of images to numpy array (1D Array)
     images = np.array(images)
