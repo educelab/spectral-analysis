@@ -12,6 +12,12 @@ SUB_REGEX = re.compile(SUB_REGEX)
 ROI_REGEX = r"(?P<x1>\d+)x(?P<y1>\d+)\+(?P<x2>\d+)x(?P<y2>\d+)"
 ROI_REGEX = re.compile(ROI_REGEX)
 
+test_cluster_list = ['kmeans', 'bkmeans']
+
+def plot_inertia_vs_cluster(cluster_obj: sklearn) -> None:
+    
+    return None
+
 def parse_roi_params(roi_dim: str) -> tuple():
     '''
     Parse ROI regexp for string X1xY1+X2xY2.
@@ -67,14 +73,34 @@ def spectral_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0
     Output:
             spectral: Spectral clustering object
     '''
-    from sklearn.cluster import SpectralClustering
+    from sklearn.cluster import SpectralCoclustering
     
-    print(f'Using Spectral clustering')
+    print(f'Using SpectralCoclustering')
     
-    spectral = SpectralClustering(n_clusters=n_clusters, random_state=0, assign_labels='kmeans')
+    spectral = SpectralCoclustering(n_clusters=n_clusters, random_state=0)
     
     spectral.fit(images_flat)
     return spectral
+
+def birch_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0) -> sklearn :
+    '''
+    Fit image to Spectral.
+    Inputs:
+            images_flat: Flattened PCA bands. Provide all the bands.
+            n_clusters: Number of clusters.
+            random_state: Seeding purpose.
+            batch_size: Batch size. Provide if number of features >=10000.
+    Output:
+            spectral: Spectral clustering object
+    '''
+    from sklearn.cluster import Birch
+    
+    print(f'Using Birch')
+    
+    birch = Birch(n_clusters=n_clusters)
+    
+    birch.fit(images_flat)
+    return birch
 
 def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None) -> sklearn :
     '''
@@ -109,7 +135,7 @@ def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, 
     kmeans.fit(images_flat)
     return kmeans
 
-def bisecting_kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None) -> sklearn :
+def bisecting_kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0) -> sklearn :
     '''
     Fit image to kmeans.
     Inputs:
@@ -195,7 +221,9 @@ def cluster(images_flat: np.ndarray, n_clusters: int, n_batch: int = None, algo:
     elif algo == 'spectral':
         seg_obj = spectral_fit(images_flat, n_clusters=n_clusters)
     elif algo == 'bkmeans':
-        seg_obj = bisecting_kmeans_fit(images_flat, n_clusters=n_clusters, batch_size=n_batch)
+        seg_obj = bisecting_kmeans_fit(images_flat, n_clusters=n_clusters)
+    elif algo == 'birch':
+        seg_obj = birch_fit(images_flat, n_clusters=None)
         
     return seg_obj
     
@@ -247,7 +275,9 @@ def main():
     parser.add_argument('--roi', type=str,
                           help='ROI used to calculate PCA: X1xY1+X2xY2')
     parser.add_argument('--algorithm', '-a', type=str, default='kmeans',
-                          help='Choose Clustering Algorithm. Default is kmeans.', choices=['kmeans', 'spectral', 'bkmeans'])
+                          help='Choose Clustering Algorithm. Default is kmeans.', choices=['kmeans', 'spectral', 'bkmeans', 'birch'])
+    parser.add_argument('--test', '-t', type=int, default=None,
+                          help='For testing purpose. Builds the graph for intertia vs clusters. Default is None. If it is provided with number, no output image will be there for the clustering. Only graph will be there.')
     args = parser.parse_args()
     
     # Validation for number of k-means clusters.
@@ -283,20 +313,38 @@ def main():
     # Converting the list of images to numpy array (1D Array)
     images = np.array(images)
     
-    # Perform segmentation
-    if is_subdivide:
-        (sub_h, sub_w) = parse_subdiv_params(args.subdivision_dimension)
-        print(f'sub_h {sub_h}, sub_w: {sub_w}')
-        print(f'Using Subdivision')
-        final_image = segment_subdivision(images=images, n_clusters=n_clusters, n_batch=n_batch, sub_h=sub_h, sub_w=sub_w, algo=args.algorithm)
-    else:
-        print(f'Not using Subdivision')
-        final_image = segment_image(images=images, n_clusters=n_clusters, algo=args.algorithm)
-    
-    print(f'Shape of the final_image: {final_image.shape}')
-    
-    #Saving the image. By default it is float 32 format
-    iio.imwrite(f'{args.output_image}', final_image)
+    if args.test is None:
+        # Perform segmentation
+        if is_subdivide:
+            (sub_h, sub_w) = parse_subdiv_params(args.subdivision_dimension)
+            print(f'sub_h {sub_h}, sub_w: {sub_w}')
+            print(f'Using Subdivision')
+            final_image = segment_subdivision(images=images, n_clusters=n_clusters, n_batch=n_batch, sub_h=sub_h, sub_w=sub_w, algo=args.algorithm)
+        else:
+            print(f'Not using Subdivision')
+            final_image = segment_image(images=images, n_clusters=n_clusters, algo=args.algorithm)
+        
+        print(f'Shape of the final_image: {final_image.shape}')
+        #Saving the image. By default it is float 32 format
+        iio.imwrite(f'{args.output_image}', final_image)
+    elif (args.test is not None and args.algorithm in test_cluster_list):
+        import matplotlib.pyplot as plt
+        clusters_inertia = list()
+        K = range(3, args.test+1)
+        for n_clusters in K:
+            print(f'K: {n_clusters}')
+            # Flatten image
+            images_flat = flatten_image(images=images)
+            # Clustering with required algorithm.
+            seg_obj = cluster(images_flat=images_flat, n_clusters=n_clusters, algo=args.algorithm)
+            clusters_inertia.append(seg_obj.inertia_)
+        print(clusters_inertia)
+        plt.plot(K, clusters_inertia,'bx-')
+        plt.xlabel('Values of K') 
+        plt.ylabel('Sum of squared distances/Inertia') 
+        plt.title(f'Elbow Method For Optimal k for {args.algorithm}')
+        plt.savefig('plot-inertia_clusters.png') 
+        plt.show()
     
     
 if __name__ == "__main__":

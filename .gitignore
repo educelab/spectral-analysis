@@ -124,4 +124,5 @@ test_data/
 scripts/data/
 scripts/archieve/
 scripts/*.tif
+scripts/*.png
 scripts/sub/*
