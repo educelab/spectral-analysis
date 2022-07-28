@@ -14,8 +14,14 @@ ROI_REGEX = re.compile(ROI_REGEX)
 
 test_cluster_list = ['kmeans', 'bkmeans']
 
-def plot_inertia_vs_cluster(cluster_obj: sklearn) -> None:
-    
+def plot_inertia_vs_cluster(cluster_obj: list, K: range, algo: str, plot_name: str = 'plot-inertia_clusters.png') -> None:
+    import matplotlib.pyplot as plt
+    plt.plot(K, cluster_obj,'bx-')
+    plt.xlabel('Values of K') 
+    plt.ylabel('Sum of squared distances/Inertia') 
+    plt.title(f'Elbow Method For Optimal k for {algo}')
+    plt.savefig(f'{plot_name}') 
+    plt.show()
     return None
 
 def parse_roi_params(roi_dim: str) -> tuple():
@@ -328,7 +334,6 @@ def main():
         #Saving the image. By default it is float 32 format
         iio.imwrite(f'{args.output_image}', final_image)
     elif (args.test is not None and args.algorithm in test_cluster_list):
-        import matplotlib.pyplot as plt
         clusters_inertia = list()
         K = range(3, args.test+1)
         for n_clusters in K:
@@ -338,13 +343,8 @@ def main():
             # Clustering with required algorithm.
             seg_obj = cluster(images_flat=images_flat, n_clusters=n_clusters, algo=args.algorithm)
             clusters_inertia.append(seg_obj.inertia_)
-        print(clusters_inertia)
-        plt.plot(K, clusters_inertia,'bx-')
-        plt.xlabel('Values of K') 
-        plt.ylabel('Sum of squared distances/Inertia') 
-        plt.title(f'Elbow Method For Optimal k for {args.algorithm}')
-        plt.savefig('plot-inertia_clusters.png') 
-        plt.show()
+        plot_inertia_vs_cluster(cluster_obj=clusters_inertia, K=K, algo=args.algorithm)
+        
     
     
 if __name__ == "__main__":
