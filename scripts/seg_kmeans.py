@@ -43,6 +43,9 @@ def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, 
             kmeans: Kmeans object
     '''
     n_features = images_flat.shape[0]
+    
+    # The documentation states that if the number of samples (in our case, the pixels), 
+    # exceeds 10k, then use MiniBatchKMeans. This requires an extra input called batch size.
     if n_features <= 10000:
         print(f'Using KMeans')
         from sklearn.cluster import KMeans
