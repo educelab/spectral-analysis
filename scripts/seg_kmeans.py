@@ -55,7 +55,26 @@ def parse_subdiv_params(sub_dim: str) -> tuple():
         sub[key] = int(value)
     
     return sub['h'], sub['w']
+
+def spectral_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0) -> sklearn :
+    '''
+    Fit image to Spectral.
+    Inputs:
+            images_flat: Flattened PCA bands. Provide all the bands.
+            n_clusters: Number of clusters.
+            random_state: Seeding purpose.
+            batch_size: Batch size. Provide if number of features >=10000.
+    Output:
+            spectral: Spectral clustering object
+    '''
+    from sklearn.cluster import SpectralClustering
     
+    print(f'Using Spectral clustering')
+    
+    spectral = SpectralClustering(n_clusters=n_clusters, random_state=0, assign_labels='kmeans')
+    
+    spectral.fit(images_flat)
+    return spectral
 
 def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None) -> sklearn :
     '''
@@ -90,6 +109,24 @@ def kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, 
     kmeans.fit(images_flat)
     return kmeans
 
+def bisecting_kmeans_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0, batch_size: int = None) -> sklearn :
+    '''
+    Fit image to kmeans.
+    Inputs:
+            images_flat: Flattened PCA bands. Provide all the bands.
+            n_clusters: Number of clusters.
+            random_state: Seeding purpose.
+            batch_size: Batch size. Provide if number of features >=10000.
+    Output:
+            kmeans: Kmeans object
+    '''
+    
+    from sklearn.cluster import BisectingKMeans
+    bkmeans = BisectingKMeans(n_clusters=n_clusters, random_state=random_state)
+    
+    bkmeans.fit(images_flat)
+    return bkmeans
+
 def flatten_image(images: np.ndarray) -> np.array :
     '''
     Flatten image.
@@ -103,7 +140,7 @@ def flatten_image(images: np.ndarray) -> np.array :
     
     return images_flat
 
-def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, sub_w: int = 4, n_batch: int = None) -> np.ndarray :
+def segment_subdivision(images: np.ndarray , n_clusters: int, algo: str = 'kmeans', sub_h: int = 4, sub_w: int = 4, n_batch: int = None) -> np.ndarray :
     '''
     Perform segmentation on subdivision.
     Inputs:
@@ -126,7 +163,7 @@ def segment_subdivision(images: np.ndarray , n_clusters: int, sub_h: int = 4, su
     # Apply kmeans on each subdivided image
     sub_seg = list()
     for subimg in subimages:
-        sub_seg.append(segment_image(images=subimg, n_clusters=n_clusters, batch_size=n_batch))
+        sub_seg.append(segment_image(images=subimg, n_clusters=n_clusters, batch_size=n_batch, algo=algo))
     return stitch_images(image_list=sub_seg, sub_h=sub_h, sub_w=sub_w, height=height, width=width)
     
     
@@ -151,7 +188,18 @@ def stitch_images(image_list: list(), sub_h: int, sub_w: int, height: int, width
             stitched_image[i*del_h:(i+1)*del_h, j*del_w:(j+1)*del_w] = image_list[(i*sub_w)+j]
     return stitched_image
 
-def segment_image(images: np.ndarray, n_clusters: int, batch_size: int = None) -> np.ndarray:
+def cluster(images_flat: np.ndarray, n_clusters: int, n_batch: int = None, algo: str = 'kmeans') -> sklearn:
+    # Perform clustering
+    if algo == 'kmeans':
+        seg_obj = kmeans_fit(images_flat, n_clusters=n_clusters, batch_size=n_batch)
+    elif algo == 'spectral':
+        seg_obj = spectral_fit(images_flat, n_clusters=n_clusters)
+    elif algo == 'bkmeans':
+        seg_obj = bisecting_kmeans_fit(images_flat, n_clusters=n_clusters, batch_size=n_batch)
+        
+    return seg_obj
+    
+def segment_image(images: np.ndarray, n_clusters: int, algo: str = 'kmeans', batch_size: int = None) -> np.ndarray:
     '''
     Segment image using KMeans.
     Inputs:
@@ -164,11 +212,12 @@ def segment_image(images: np.ndarray, n_clusters: int, batch_size: int = None) -
     # Flatten image
     images_flat = flatten_image(images=images)
     
-    # Perform kmeans
-    kmeans = kmeans_fit(images_flat, n_clusters=n_clusters, batch_size=batch_size)
+    # Clustering with required algorithm.
+    seg_obj = cluster(images_flat=images_flat, n_clusters=n_clusters, algo=algo)
+    
     
     # make a flattened numpy array
-    flat_seg = np.array(kmeans.labels_)
+    flat_seg = np.array(seg_obj.labels_)
     
     #Number of clusters and its labels
     print(f'unique cluster labels: {np.unique(flat_seg)}')
@@ -197,6 +246,8 @@ def main():
                         help='Calculate the number of subdivision HxW. Default is 4x4.', default='4x4')
     parser.add_argument('--roi', type=str,
                           help='ROI used to calculate PCA: X1xY1+X2xY2')
+    parser.add_argument('--algorithm', '-a', type=str, default='kmeans',
+                          help='Choose Clustering Algorithm. Default is kmeans.', choices=['kmeans', 'spectral', 'bkmeans'])
     args = parser.parse_args()
     
     # Validation for number of k-means clusters.
@@ -237,10 +288,10 @@ def main():
         (sub_h, sub_w) = parse_subdiv_params(args.subdivision_dimension)
         print(f'sub_h {sub_h}, sub_w: {sub_w}')
         print(f'Using Subdivision')
-        final_image = segment_subdivision(images=images, n_clusters=n_clusters, n_batch=n_batch, sub_h=sub_h, sub_w=sub_w)
+        final_image = segment_subdivision(images=images, n_clusters=n_clusters, n_batch=n_batch, sub_h=sub_h, sub_w=sub_w, algo=args.algorithm)
     else:
         print(f'Not using Subdivision')
-        final_image = segment_image(images=images, n_clusters=n_clusters)
+        final_image = segment_image(images=images, n_clusters=n_clusters, algo=args.algorithm)
     
     print(f'Shape of the final_image: {final_image.shape}')
     
