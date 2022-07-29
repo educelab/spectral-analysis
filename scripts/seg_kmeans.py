@@ -93,14 +93,14 @@ def spectral_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0
 
 def birch_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0) -> sklearn :
     '''
-    Fit image to Spectral.
+    Fit image to Birch.
     Inputs:
             images_flat: Flattened PCA bands. Provide all the bands.
             n_clusters: Number of clusters.
             random_state: Seeding purpose.
             batch_size: Batch size. Provide if number of features >=10000.
     Output:
-            spectral: Spectral clustering object
+            birch: Birch clustering object
     '''
     from sklearn.cluster import Birch
     
