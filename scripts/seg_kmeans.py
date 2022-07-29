@@ -6,7 +6,6 @@ import sklearn
 import argparse
 import sys
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import subplots
 from joblib import Parallel, delayed
 
 SUB_REGEX = r"(?P<h>\d+)x(?P<w>\d+)"
