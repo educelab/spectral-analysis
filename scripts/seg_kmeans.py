@@ -80,13 +80,16 @@ def spectral_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0
     Output:
             spectral: Spectral clustering object
     '''
-    from sklearn.cluster import SpectralCoclustering
+    from sklearn.cluster import SpectralCoclustering, SpectralClustering
     
     print(f'Using SpectralCoclustering')
     
     spectral = SpectralCoclustering(n_clusters=n_clusters, random_state=0)
     
     spectral.fit(images_flat)
+    
+    spectral.labels_ = spectral.row_labels_
+    
     return spectral
 
 def birch_fit(images_flat: np.ndarray, n_clusters: int, random_state: int = 0) -> sklearn :
@@ -305,10 +308,10 @@ def eval_elbo(images: list, test_iter: int, algorithm: str, subdiv: bool = False
             sub_clusters = {}
             clusters_inertia_idx = list()
             clusters_inertia_idx = Parallel(n_jobs=len(sub_images))(delayed(get_inertia_list)(images=image, algorithm=algorithm, K=K, idx=idx) for idx, image in enumerate(sub_images))
-            print(clusters_inertia_idx)
+            # print(clusters_inertia_idx)
             for subdivs in clusters_inertia_idx:
                 sub_clusters[subdivs[1]] = subdivs[0]
-            print(sub_clusters)
+            # print(sub_clusters)
             for cluster_plot_idx in sub_clusters:
                 (xr, xc) = get_matrix_idx(value=cluster_plot_idx, n_col=sub_w)
                 axs[xr, xc].plot(K, sub_clusters[cluster_plot_idx], 'bx-')
