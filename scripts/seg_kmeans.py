@@ -7,6 +7,7 @@ import argparse
 import sys
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import subplots
+from joblib import Parallel, delayed
 
 SUB_REGEX = r"(?P<h>\d+)x(?P<w>\d+)"
 SUB_REGEX = re.compile(SUB_REGEX)
@@ -196,6 +197,8 @@ def segment_subdivision(images: np.ndarray , n_clusters: int, algo: str = 'kmean
     Output:
             final_image: Finally clustered and stitched image.
     '''
+    height = images.shape[1]
+    width = images.shape[2]
     
     #Getting the list of subdivided images
     subimages = subdivide_image(images=images, sub_h=sub_h, sub_w=sub_w)
@@ -269,21 +272,27 @@ def segment_image(images: np.ndarray, n_clusters: int, algo: str = 'kmeans', bat
     print(final_image.shape)
     
     return final_image
+
+
 def get_matrix_idx(value: int, n_col: int) -> tuple :
     return ((value-(value%n_col))//n_col , value%n_col)
+
+def get_inertia_list(images: np.ndarray, algorithm: str, K: range, idx: int = None) -> list:
+    clusters_inertia = list()
+    for n_clusters in K:
+        print(f'K: {n_clusters}')
+        # Flatten image
+        images_flat = flatten_image(images=images)
+        # Clustering with required algorithm.
+        seg_obj = cluster(images_flat=images_flat, n_clusters=n_clusters, algo=algorithm)
+        clusters_inertia.append(seg_obj.inertia_)
+    return clusters_inertia, idx
 
 def eval_elbo(images: list, test_iter: int, algorithm: str, subdiv: bool = False, sub_dim: str = None, plot_name: str = 'elbo') -> None:
     
     K = range(3, test_iter + 1)
     if subdiv == False:
-        clusters_inertia = list()
-        for n_clusters in K:
-            print(f'K: {n_clusters}')
-            # Flatten image
-            images_flat = flatten_image(images=images)
-            # Clustering with required algorithm.
-            seg_obj = cluster(images_flat=images_flat, n_clusters=n_clusters, algo=algorithm)
-            clusters_inertia.append(seg_obj.inertia_)
+        clusters_inertia = get_inertia_list(images=images, algorithm=algorithm, K=K)
         plot_inertia_vs_cluster(cluster_obj=clusters_inertia, K=K, algo=algorithm, plot_name=plot_name)
     else:
         if sub_dim is not None:
@@ -294,20 +303,15 @@ def eval_elbo(images: list, test_iter: int, algorithm: str, subdiv: bool = False
             fig, axs = plt.subplots(nrows=sub_h, ncols=sub_w)
             sub_images = subdivide_image(images=images, sub_h=sub_h, sub_w=sub_w)
             sub_clusters = {}
-            for idx, image in enumerate(sub_images):
-                clusters_inertia = list()
-                for n_clusters in K:
-                    print(f'K: {n_clusters}')
-                    # Flatten image
-                    image_flat = flatten_image(images=image)
-                    # Clustering with required algorithm.
-                    seg_obj = cluster(images_flat=image_flat, n_clusters=n_clusters, algo=algorithm)
-                    clusters_inertia.append(seg_obj.inertia_)
-                sub_clusters[idx] = clusters_inertia
+            clusters_inertia_idx = list()
+            clusters_inertia_idx = Parallel(n_jobs=len(sub_images))(delayed(get_inertia_list)(images=image, algorithm=algorithm, K=K, idx=idx) for idx, image in enumerate(sub_images))
+            print(clusters_inertia_idx)
+            for subdivs in clusters_inertia_idx:
+                sub_clusters[subdivs[1]] = subdivs[0]
+            print(sub_clusters)
             for cluster_plot_idx in sub_clusters:
-                splot=plot_inertia_vs_cluster(cluster_obj=clusters_inertia, K=K, algo=algorithm, plot_name=f'{plot_name}_{cluster_plot_idx}')
                 (xr, xc) = get_matrix_idx(value=cluster_plot_idx, n_col=sub_w)
-                axs[xr, xc].plot(K, clusters_inertia, 'bx-')
+                axs[xr, xc].plot(K, sub_clusters[cluster_plot_idx], 'bx-')
             fig.savefig(f'{plot_name}_all.png')
         else:
             print('sub-div dim required.')
@@ -393,7 +397,6 @@ def main():
     elif (args.evaluate is not None and args.algorithm in test_cluster_list):
         eval_elbo(images=images, test_iter=args.evaluate, algorithm=args.algorithm, subdiv=args.eval_subdiv, sub_dim=args.subdivision_dimension)
         
-    
-    
+        
 if __name__ == "__main__":
     main()
