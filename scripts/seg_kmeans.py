@@ -5,6 +5,8 @@ import numpy as np
 import sklearn
 import argparse
 import sys
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import subplots
 
 SUB_REGEX = r"(?P<h>\d+)x(?P<w>\d+)"
 SUB_REGEX = re.compile(SUB_REGEX)
@@ -14,15 +16,13 @@ ROI_REGEX = re.compile(ROI_REGEX)
 
 test_cluster_list = ['kmeans', 'bkmeans']
 
-def plot_inertia_vs_cluster(cluster_obj: list, K: range, algo: str, plot_name: str = 'plot-inertia_clusters.png') -> None:
-    import matplotlib.pyplot as plt
+def plot_inertia_vs_cluster(cluster_obj: list, K: range, algo: str, plot_name: str = 'plot-inertia_clusters') -> plt:
     plt.plot(K, cluster_obj,'bx-')
     plt.xlabel('Values of K') 
     plt.ylabel('Sum of squared distances/Inertia') 
     plt.title(f'Elbow Method For Optimal k for {algo}')
-    plt.savefig(f'{plot_name}') 
-    plt.show()
-    return None
+    plt.savefig(f'{plot_name}.png') 
+    return plt
 
 def parse_roi_params(roi_dim: str) -> tuple():
     '''
@@ -172,6 +172,18 @@ def flatten_image(images: np.ndarray) -> np.array :
     
     return images_flat
 
+def subdivide_image(images: np.ndarray, sub_h: int = 4, sub_w: int = 4) -> list:
+    subimages = list()
+    height = images.shape[1]
+    width = images.shape[2]
+    del_h = height//sub_h
+    del_w = width//sub_w
+    for h in range(sub_h):
+        for w in range(sub_w):
+            subimages.append(images[:,h*del_h:min((h+1)*del_h, height), w*del_w:min((w+1)*del_w, width)])
+    return subimages
+    
+    
 def segment_subdivision(images: np.ndarray , n_clusters: int, algo: str = 'kmeans', sub_h: int = 4, sub_w: int = 4, n_batch: int = None) -> np.ndarray :
     '''
     Perform segmentation on subdivision.
@@ -184,14 +196,10 @@ def segment_subdivision(images: np.ndarray , n_clusters: int, algo: str = 'kmean
     Output:
             final_image: Finally clustered and stitched image.
     '''
-    subimages = list()
-    height = images.shape[1]
-    width = images.shape[2]
-    del_h = height//sub_h
-    del_w = width//sub_w
-    for h in range(sub_h):
-        for w in range(sub_w):
-            subimages.append(images[:,h*del_h:min((h+1)*del_h, height), w*del_w:min((w+1)*del_w, width)])
+    
+    #Getting the list of subdivided images
+    subimages = subdivide_image(images=images, sub_h=sub_h, sub_w=sub_w)
+    
     # Apply kmeans on each subdivided image
     sub_seg = list()
     for subimg in subimages:
@@ -261,6 +269,49 @@ def segment_image(images: np.ndarray, n_clusters: int, algo: str = 'kmeans', bat
     print(final_image.shape)
     
     return final_image
+def get_matrix_idx(value: int, n_col: int) -> tuple :
+    return ((value-(value%n_col))//n_col , value%n_col)
+
+def eval_elbo(images: list, test_iter: int, algorithm: str, subdiv: bool = False, sub_dim: str = None, plot_name: str = 'elbo') -> None:
+    
+    K = range(3, test_iter + 1)
+    if subdiv == False:
+        clusters_inertia = list()
+        for n_clusters in K:
+            print(f'K: {n_clusters}')
+            # Flatten image
+            images_flat = flatten_image(images=images)
+            # Clustering with required algorithm.
+            seg_obj = cluster(images_flat=images_flat, n_clusters=n_clusters, algo=algorithm)
+            clusters_inertia.append(seg_obj.inertia_)
+        plot_inertia_vs_cluster(cluster_obj=clusters_inertia, K=K, algo=algorithm, plot_name=plot_name)
+    else:
+        if sub_dim is not None:
+            print('subdivision present.')
+            (sub_h, sub_w) = parse_subdiv_params(sub_dim=sub_dim)
+            print(f'sub_h {sub_h}, sub_w: {sub_w}')
+            #Making the plot matrix
+            fig, axs = plt.subplots(nrows=sub_h, ncols=sub_w)
+            sub_images = subdivide_image(images=images, sub_h=sub_h, sub_w=sub_w)
+            sub_clusters = {}
+            for idx, image in enumerate(sub_images):
+                clusters_inertia = list()
+                for n_clusters in K:
+                    print(f'K: {n_clusters}')
+                    # Flatten image
+                    image_flat = flatten_image(images=image)
+                    # Clustering with required algorithm.
+                    seg_obj = cluster(images_flat=image_flat, n_clusters=n_clusters, algo=algorithm)
+                    clusters_inertia.append(seg_obj.inertia_)
+                sub_clusters[idx] = clusters_inertia
+            for cluster_plot_idx in sub_clusters:
+                splot=plot_inertia_vs_cluster(cluster_obj=clusters_inertia, K=K, algo=algorithm, plot_name=f'{plot_name}_{cluster_plot_idx}')
+                (xr, xc) = get_matrix_idx(value=cluster_plot_idx, n_col=sub_w)
+                axs[xr, xc].plot(K, clusters_inertia, 'bx-')
+            fig.savefig(f'{plot_name}_all.png')
+        else:
+            print('sub-div dim required.')
+            return
 
 def main():
     parser = argparse.ArgumentParser(description='Run KMeans for segmentation on a set of images')
@@ -282,8 +333,11 @@ def main():
                           help='ROI used to calculate PCA: X1xY1+X2xY2')
     parser.add_argument('--algorithm', '-a', type=str, default='kmeans',
                           help='Choose Clustering Algorithm. Default is kmeans.', choices=['kmeans', 'spectral', 'bkmeans', 'birch'])
-    parser.add_argument('--test', '-t', type=int, default=None,
+    parser.add_argument('--evaluate', '-e', type=int, default=None,
                           help='For testing purpose. Builds the graph for intertia vs clusters. Default is None. If it is provided with number, no output image will be there for the clustering. Only graph will be there.')
+    parser.add_argument('--eval-subdiv', action='store_true',
+                          help='For testing purpose. Evaluate over subdivided regions.')
+    
     args = parser.parse_args()
     
     # Validation for number of k-means clusters.
@@ -315,11 +369,14 @@ def main():
         (x1, y1, x2, y2) = parse_roi_params(args.roi)
         for imagefile in files:
             images.append(iio.imread(imagefile)[y1:y2, x1:x2])
+    else:
+        for imagefile in files:
+            images.append(iio.imread(imagefile))
     
     # Converting the list of images to numpy array (1D Array)
     images = np.array(images)
     
-    if args.test is None:
+    if args.evaluate is None:
         # Perform segmentation
         if is_subdivide:
             (sub_h, sub_w) = parse_subdiv_params(args.subdivision_dimension)
@@ -333,17 +390,8 @@ def main():
         print(f'Shape of the final_image: {final_image.shape}')
         #Saving the image. By default it is float 32 format
         iio.imwrite(f'{args.output_image}', final_image)
-    elif (args.test is not None and args.algorithm in test_cluster_list):
-        clusters_inertia = list()
-        K = range(3, args.test+1)
-        for n_clusters in K:
-            print(f'K: {n_clusters}')
-            # Flatten image
-            images_flat = flatten_image(images=images)
-            # Clustering with required algorithm.
-            seg_obj = cluster(images_flat=images_flat, n_clusters=n_clusters, algo=args.algorithm)
-            clusters_inertia.append(seg_obj.inertia_)
-        plot_inertia_vs_cluster(cluster_obj=clusters_inertia, K=K, algo=args.algorithm)
+    elif (args.evaluate is not None and args.algorithm in test_cluster_list):
+        eval_elbo(images=images, test_iter=args.evaluate, algorithm=args.algorithm, subdiv=args.eval_subdiv, sub_dim=args.subdivision_dimension)
         
     
     
