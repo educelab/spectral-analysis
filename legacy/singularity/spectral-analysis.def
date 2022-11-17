@@ -1,0 +1,54 @@
+Bootstrap: docker
+From: python:3
+
+%labels
+  MAINTAINER Daniel Dopp <danieldopp@uky.edu>
+  VERSION 1.5
+
+%post
+  # Build directory structure for LCC
+  mkdir /scratch
+  mkdir /project
+  mkdir /pscratch
+  mkdir /share
+  mkdir /opt/ohpc
+  mkdir /mnt/gpfs2_16m
+  mkdir /mnt/gpfs2_4m
+
+  # Install git
+  apt update
+  apt install -y git
+
+  # Install tree, good for visualizing Spectral Package structure
+  apt install tree
+
+  # Upgrade pip
+  pip3 install --upgrade pip
+
+  # Clone the spectral analysis source from GitLab
+  git clone https://code.cs.uky.edu/seales-research/spectral-analysis.git
+
+  # Switch to dev branch
+  cd /spectral-analysis
+  git checkout development
+
+  # Install spectral analysis
+  pip install -e .
+
+  # Give read/write access in spectral-analysis (so it can later be edited using a persistent overlay)
+  chmod --recursive a+rw /spectral-analysis
+
+%runscript
+  exec "$@"
+
+%help
+  This container provides an environment for running spectral-analysis package code.
+
+  Building the container:
+    - You will need to enter your https GitLab login information to initially clone the repository from source
+    - Build as usual, for example: sudo singularity build spectral-analysis spectral-analysis.def
+
+  Usage:
+    - It is possible to use an overlay to allow one to pull changes to the dev branch only, or make local edits to spectral-analysis code:
+      `dd if=/dev/zero of=spectral-analysis.overlay bs=1M count=500 && mkfs.ext3 spectral-analysis.overlay; singularity shell --overlay spectral-analysis.overlay spectral-analysis.sif
+      This container is intended to be built once, and used with many checkouts of spectral-analysis code. Only when the dependencies change does the container need rebuilding.

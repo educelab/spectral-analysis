@@ -5,7 +5,7 @@ import imageio
 import numpy as np
 import torch
 import torch.nn as nn
-from spectral_analysis.io import SpectralDataHandler
+from legacy.spectral_analysis.io import SpectralDataHandler
 
 
 def get_training_data_paths(f_name):

@@ -7,7 +7,7 @@ import imageio.v2 as iio
 import numpy as np
 from tqdm import tqdm
 
-import pca as pca_utils
+import spec_tools.pca
 
 # Upper IR filter list
 UPPER_IR = ['780IR', '850IR', '940IR', '1050IR']
@@ -156,9 +156,8 @@ def generate_pca_sets(out_dir, pca_sets, prefix: str = ''):
         images = np.stack([iio.imread(f) for f in band_paths])
 
         # Run PCA
-        pca_utils.enable_print_progress(False)
-        pca = pca_utils.pca_fit(images)
-        pca_images = pca_utils.pca_apply_transform(images, pca)
+        pca = spec_tools.pca.fit(images)
+        pca_images = spec_tools.pca.apply_transform(images, pca)
 
         # Save the outputs
         padding = len(str(pca.n_components_))
