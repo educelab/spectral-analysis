@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from tqdm import tqdm
 
-from spectral_analysis.io import SpectralDataHandler
+from legacy.spectral_analysis.io import SpectralDataHandler
 
 
 class TestFullConv(nn.Module):

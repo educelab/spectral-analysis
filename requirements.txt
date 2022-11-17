@@ -1,14 +1,6 @@
-h5py
 imageio
-matplotlib
 numpy
-opencv-python
-pandas
-pillow
-progressbar
-pytest
+PyExifTool
+scikit-image
 scikit-learn
-tensorflow
-torch
-tox
 tqdm
