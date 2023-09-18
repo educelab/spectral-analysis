@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Union
+from copy import deepcopy
 
 import numpy as np
 
@@ -24,16 +25,31 @@ def setup_logging(log_level: int = logging.INFO):
 
 def expand_path_list(
         files: Union[str | List[str | os.PathLike]],
-        recursive: bool = False):
+        recursive: bool = False, dedupe=True):
     logger = logging.getLogger(__name__)
 
     # Promote to list
     if isinstance(files, str):
         files = [files]
+    else:
+        files = deepcopy(files)
 
-    # Construct final files list
+    # Construct files list
     final_files = []
     for file in files:
+        # short circuit for glob patterns
+        if '*' in str(file):
+            root = Path()
+            file = Path(file)
+            if file.is_absolute():
+                for p in file.parents:
+                    if '*' not in str(p):
+                        root = p
+                        file = file.relative_to(root)
+                        break
+            files.extend(root.glob(str(file)))
+            continue
+
         path = Path(file)
         if path.is_file():
             final_files.append(path)
@@ -45,6 +61,11 @@ def expand_path_list(
                     final_files.extend(expand_path_list([s], recursive))
         else:
             logger.warning(f'Skipping: {file}')
+
+    # Dedupe file list
+    if dedupe:
+        final_files = list(set(final_files))
+
     return final_files
 
 
