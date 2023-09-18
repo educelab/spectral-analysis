@@ -34,17 +34,14 @@ stable.
 Apply contrast enhancement to input images:
 
 ```bash
-# Run simple image normalization. 
-# Similar to ImageMagick's -auto-level flag.
-spec-enhance -i foo01.tif foo02.tif bar*.tif -o normalized/
+# apply gamma correction using default (1./2.2) followed by contrast stretching to [2%, 98%] of histogram  
+spec-enhance -i foo.tif -- -gamma -stretch=2,98
 
-# Run contrast enhancement with gamma correction and white/black level clipping.
-# Similar to ImageMagick's -level flag.
-spec-enhance -i foo01.tif foo02.tif bar*.tif -o enhanced/ --enhance
+# apply CLAHE contrast enhancement followed by gamma correction
+spec-enhance -i foo.tif -- -clahe -gamma
 
-# Run CLAHE contrast enhancement. 
-# Applied in addition to --enhance (if provided).
-spec-enhance -i foo01.tif foo02.tif bar*.tif -o clahe/ --clahe
+# apply gamma correction twice (why, though?)
+spec-enhance -i foo.tif -- -gamma -gamma=2.2
 ```
 
 ### spec-pca
