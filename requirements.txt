@@ -1,6 +1,7 @@
 educelab-cmdparse
-educelab-imgproc>=0.3.1
+educelab-imgproc>=0.6.0
 imageio
+imagecodecs
 numpy
 PyExifTool
 scikit-image
