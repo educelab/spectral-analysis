@@ -32,15 +32,16 @@ From: ubuntu:22.04
   dpkg-reconfigure --frontend=noninteractive locales
 
   # Install exiftool
-  echo "Installing exiftool"
+  echo "Installing ExifTool"
   mkdir -p /usr/local/educelab/exiftool/ && cd /usr/local/educelab/exiftool/
-  curl -O -L https://exiftool.org/Image-ExifTool-12.87.tar.gz
-  tar -xzf Image-ExifTool-12.87.tar.gz
-  cd Image-ExifTool-12.87/
+  EXIFTOOL_VER=$(curl --no-progress-meter https://exiftool.org/ver.txt)
+  curl -O -L https://exiftool.org/Image-ExifTool-${EXIFTOOL_VER}.tar.gz
+  tar -xzf Image-ExifTool-${EXIFTOOL_VER}.tar.gz
+  cd Image-ExifTool-${EXIFTOOL_VER}/
   perl Makefile.PL
   make test
   make install
-  echo "Exiftool installed"
+  echo "Exiftool ${EXIFTOOL_VER} installed"
 
   # Create a venv for this project
   python3 -m venv /usr/local/educelab/spectral-analysis/.venv/
