@@ -2,14 +2,14 @@ import logging
 import sys
 
 import numpy as np
-from sklearn.decomposition import IncrementalPCA, PCA
+from sklearn.decomposition import IncrementalPCA, PCA, FastICA
 
 
 def fit(x, components: int = None, batch_size: int = None,
         incremental: bool = False, roi=None):
     logger = logging.getLogger(__name__)
     # Validate number of components
-    if components is not None and not (1 < components < x.shape[0]):
+    if components is not None and not (1 <= components < x.shape[0]):
         logger.error(f'Requested components ({components}) outside '
                      f'range [1, {x.shape[0]}]')
         sys.exit(1)
@@ -19,7 +19,7 @@ def fit(x, components: int = None, batch_size: int = None,
         pca = IncrementalPCA(n_components=components,
                              batch_size=batch_size)
     else:
-        pca = PCA(n_components=components)
+        pca = FastICA(n_components=components, random_state=42)
 
     # Crop training data to ROI
     if roi is not None:
@@ -46,5 +46,5 @@ def apply_transform(x, pca):
 
     # Convert back to images
     x_flat = np.swapaxes(x_flat, 0, 1)
-    pca_shape = (pca.n_components_,) + x.shape[1:]
+    pca_shape = (pca.components_.shape[0],) + x.shape[1:]
     return x_flat.reshape(pca_shape)
