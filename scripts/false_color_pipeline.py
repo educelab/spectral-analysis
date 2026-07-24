@@ -160,7 +160,7 @@ def generate_pca_sets(out_dir, pca_sets, prefix: str = ''):
         pca_images = spec_tools.pca.apply_transform(images, pca)
 
         # Save the outputs
-        padding = len(str(pca.n_components_))
+        padding = len(str(len(pca_images)))
         file_list = []
         for idx, img in enumerate(pca_images):
             output_path = pca_out / f'{set_label}_{idx:0{padding}}.tif'

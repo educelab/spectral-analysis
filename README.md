@@ -45,7 +45,7 @@ spec-enhance -i foo.tif -- -gamma -gamma=2.2
 ```
 
 ### spec-pca
-Apply PCA transforms to a set of equally-sized images:
+Apply dimensionality reduction transforms to a set of equally-sized images:
 
 ```bash
 # Fit PCA to an image set and save all principal component images
@@ -53,6 +53,9 @@ spec-pca -i training_set/*.tif
 
 # Fit PCA to an image set and save the top 5 principal component images
 spec-pca -i training_set/*.tif -c 5
+
+# Fit Independent Component Analysis (ICA) instead of PCA
+spec-pca -i training_set/*.tif -m ica
 
 # Fit PCA to an image set region-of-interest
 spec-pca -i training_set/*.tif --roi 800x600+200+100
