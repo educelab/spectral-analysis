@@ -12,8 +12,6 @@ stages:
     - python -m pip install .
     - spec-enhance -h
     - python -m unittest -v tests.test_spec_tools
-  tags:
-    - docker
 
 test:3.10:
   extends: .test
