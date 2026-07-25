@@ -1,7 +1,7 @@
 name: Build Docker image
 
-# On main/tags/dispatch this builds and publishes. On pull requests it builds
-# only, without pushing, so Dockerfile breakage is caught before merge.
+# On main/tags/dispatch this builds and publishes. On pull requests it builds the
+# same platforms but does not push, so Dockerfile breakage is caught before merge.
 #
 # Runs independently of CI rather than gating on it: the image build is itself a
 # real check (a broken install fails it). A red test suite can still publish a
@@ -59,24 +59,21 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Only needed for the emulated arm64 leg, which PR builds skip.
+      # Needed for the emulated arm64 leg, which runs on PRs too.
       - name: Set up QEMU
-        if: github.event_name != 'pull_request'
         uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      # PR builds are amd64-only and unpushed: they exist to prove the Dockerfile
-      # still builds, and nothing here needs compiling (manylinux wheels exist for
-      # both arches), so an emulated arm64 leg on every PR would cost a lot of
-      # wall-clock for little extra signal. Publishing builds do both arches, with
-      # arm64 under QEMU emulation -- expect a slow job.
+      # Both arches everywhere, so a PR validates exactly what a publish will
+      # build. The arm64 leg runs under QEMU emulation -- expect a slow job even
+      # on PRs. PR builds differ from publishing builds only in not pushing.
       - name: Build and push
         uses: docker/build-push-action@v7
         with:
           context: .
-          platforms: ${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -30,10 +30,10 @@ CI is GitHub Actions (`.github/workflows/`), on `main` pushes, `v*` tags, PRs, a
 - `ci.yml` — installs ExifTool via apt (`libimage-exiftool-perl`, *not* the bare `exiftool` package,
   which only exists on Debian), then `pip install .`, smoke-tests all three console scripts, then runs
   the unittest module against Python 3.12 and 3.13. There is no linter or formatter configured.
-- `build_docker.yml` — builds the root `Dockerfile` and pushes to
-  `ghcr.io/educelab/spectral-analysis`. On `main`/tags it builds `linux/amd64,linux/arm64` (arm64 under
-  QEMU emulation, so the job is slow); on pull requests it builds amd64 only and does **not** push, as
-  a Dockerfile-breakage check. It runs independently of `ci.yml` and does **not** gate on tests passing.
+- `build_docker.yml` — builds the root `Dockerfile` for `linux/amd64,linux/arm64` (arm64 under QEMU
+  emulation, so the job is slow) and pushes to `ghcr.io/educelab/spectral-analysis`. Pull requests
+  build both platforms but do **not** push, as a Dockerfile-breakage check — so a PR validates exactly
+  what a publish will build. It runs independently of `ci.yml` and does **not** gate on tests passing.
 
 **The package is Python 3.12+** (`python_requires`). This is forced by the dependency stack, not
 preference: `tifffile` requires `>=3.12` and numpy 2.5 dropped cp310/cp311, so older interpreters
