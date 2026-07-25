@@ -29,17 +29,24 @@ CI is GitHub Actions (`.github/workflows/`), on `main` pushes, `v*` tags, PRs, a
 
 - `ci.yml` — installs ExifTool via apt (`libimage-exiftool-perl`, *not* the bare `exiftool` package,
   which only exists on Debian), then `pip install .`, smoke-tests all three console scripts, then runs
-  the unittest module against Python 3.10–3.13. There is no linter or formatter configured.
-- `build_docker.yml` — builds the root `Dockerfile` for `linux/amd64,linux/arm64` (QEMU) and pushes to
-  `ghcr.io/educelab/spectral-analysis`. It runs independently of `ci.yml` and does **not** gate on
-  tests passing.
+  the unittest module against Python 3.12 and 3.13. There is no linter or formatter configured.
+- `build_docker.yml` — builds the root `Dockerfile` and pushes to
+  `ghcr.io/educelab/spectral-analysis`. On `main`/tags it builds `linux/amd64,linux/arm64` (arm64 under
+  QEMU emulation, so the job is slow); on pull requests it builds amd64 only and does **not** push, as
+  a Dockerfile-breakage check. It runs independently of `ci.yml` and does **not** gate on tests passing.
 
-Pin considerations for the image live in the `Dockerfile` header: the base is `python:3.12-slim`
-because 3.12 is the floor at which every compiled dependency has manylinux wheels for both arches
-(numpy 2.5 dropped cp311; `imagecodecs` ships `cp312-abi3`, which also covers 3.13+). Without that,
-the image would need a build toolchain. ExifTool is installed from source and
-deliberately unpinned — `exiftool.org` only hosts the current tarball, so pinned URLs 404 once a new
-version ships; SourceForge is the primary mirror with a `gzip -t` validation guard.
+**The package is Python 3.12+** (`python_requires`). This is forced by the dependency stack, not
+preference: `tifffile` requires `>=3.12` and numpy 2.5 dropped cp310/cp311, so older interpreters
+cannot install current versions of the project's own dependencies. Keep `python_requires`, the CI
+matrix, the README requirements list, and the `Dockerfile` base in sync when this moves.
+
+Pin considerations for the image live in the `Dockerfile` header: the base is `python:3.13-slim`,
+chosen because every compiled dependency (numpy, scipy, imagecodecs, scikit-image, scikit-learn,
+pillow) has manylinux wheels for both arches there — `imagecodecs` ships `cp312-abi3`, whose stable
+ABI is what covers 3.13+. Re-verify that before bumping, or the image needs a build toolchain.
+ExifTool is installed from source and deliberately unpinned — `exiftool.org` only hosts the current
+tarball, so pinned URLs 404 once a new version ships; SourceForge is the primary mirror with a
+`gzip -t` validation guard.
 
 **ExifTool 12+ must be on PATH** — `spec-enhance` shells out to it via `educelab.imgproc.exiftool` to
 copy metadata tags to outputs.

@@ -8,13 +8,13 @@
 # pull it directly instead of building a .sif from source:
 #   apptainer pull docker://ghcr.io/educelab/spectral-analysis:latest
 #
-# Multi-arch (linux/amd64, linux/arm64): every compiled dependency (numpy,
-# imagecodecs, scikit-image, scikit-learn) ships manylinux wheels for both arches
-# at 3.12+, so no build toolchain is needed here. 3.12 is the floor for that --
-# numpy 2.5 dropped cp311, and imagecodecs' wheels are cp312-abi3 (stable ABI,
-# so they also cover 3.13+). 3.13 works too; verify wheel coverage for all four
-# compiled deps on both arches before bumping, or this image needs gcc/g++/make.
-ARG BASE_IMAGE=python:3.12-slim
+# Multi-arch (linux/amd64, linux/arm64): every compiled dependency (numpy, scipy,
+# imagecodecs, scikit-image, scikit-learn, pillow) ships manylinux wheels for
+# both arches on 3.13, so no build toolchain is needed here. Verify that still
+# holds for all of them on both arches before bumping BASE_IMAGE, or this image
+# will need gcc/g++/make and a long source build. Note imagecodecs publishes
+# cp312-abi3 wheels (stable ABI), which is what covers 3.13 and later.
+ARG BASE_IMAGE=python:3.13-slim
 FROM ${BASE_IMAGE}
 
 LABEL org.opencontainers.image.title="spectral-analysis"

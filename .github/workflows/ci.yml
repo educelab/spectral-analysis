@@ -12,23 +12,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Runs the suite across the full supported interpreter range. setup.cfg
-  # declares python_requires >=3.10, so all four are tested; fail-fast is off so
-  # one version's failure does not mask the others. Note that numpy 2.5 dropped
-  # cp311 wheels, so the 3.10/3.11 legs resolve an older numpy/scikit-image
-  # stack than 3.12/3.13 do.
+  # 3.12 is the floor declared by setup.cfg's python_requires. The dependency
+  # stack forced it: tifffile requires >=3.12 and numpy 2.5 dropped cp310/cp311,
+  # so older interpreters cannot install current versions of this project's own
+  # dependencies. fail-fast is off so one version's failure does not mask others.
   test:
     name: py ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 

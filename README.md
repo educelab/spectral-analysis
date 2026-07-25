@@ -5,7 +5,7 @@ Tools for processing and analyzing spectral image sets.
 [TOC]
 
 ## Requirements
-- Python 3.10+
+- Python 3.12+
 - [ExifTool 12+](https://exiftool.org/install.html)
 
 ## Installation
