@@ -25,8 +25,21 @@ python -m unittest -v tests.test_spec_tools.UtilsTest.test_setup_logging
 spec-enhance -h
 ```
 
-CI (`.gitlab-ci.yml`) installs ExifTool via apt, then `pip install .`, then `spec-enhance -h` and the
-unittest module, against Python 3.10 and 3.11. There is no linter or formatter configured.
+CI is GitHub Actions (`.github/workflows/`), on `main` pushes, `v*` tags, PRs, and manual dispatch:
+
+- `ci.yml` — installs ExifTool via apt (`libimage-exiftool-perl`, *not* the bare `exiftool` package,
+  which only exists on Debian), then `pip install .`, smoke-tests all three console scripts, then runs
+  the unittest module against Python 3.10–3.13. There is no linter or formatter configured.
+- `build_docker.yml` — builds the root `Dockerfile` for `linux/amd64,linux/arm64` (QEMU) and pushes to
+  `ghcr.io/educelab/spectral-analysis`. It runs independently of `ci.yml` and does **not** gate on
+  tests passing.
+
+Pin considerations for the image live in the `Dockerfile` header: the base is `python:3.12-slim`
+because 3.12 is the floor at which every compiled dependency has manylinux wheels for both arches
+(numpy 2.5 dropped cp311; `imagecodecs` ships `cp312-abi3`, which also covers 3.13+). Without that,
+the image would need a build toolchain. ExifTool is installed from source and
+deliberately unpinned — `exiftool.org` only hosts the current tarball, so pinned URLs 404 once a new
+version ships; SourceForge is the primary mirror with a `gzip -t` validation guard.
 
 **ExifTool 12+ must be on PATH** — `spec-enhance` shells out to it via `educelab.imgproc.exiftool` to
 copy metadata tags to outputs.
@@ -91,7 +104,9 @@ that actually produced them (`pca_00.tif`, `ica_00.tif`) — derived from the lo
   be mirrored here.
 - `legacy/` — the pre-2.0 `spectral_analysis` package and experiment code (autoencoder/LLE/neural-net
   contrast enhancement). Excluded from the installed package; treat as reference only.
-- `singularity/` — Apptainer/Singularity definition used on the UK HPC cluster, plus a SLURM
-  `submit_job.sh`. The container installs the source editable at
-  `/usr/local/educelab/spectral-analysis` and expects to be run with a writable overlay so users can
-  check out branches inside the container.
+The project previously shipped a `singularity/` directory (an Apptainer definition plus a SLURM
+`submit_job.sh`) that installed the source editable and expected a writable overlay for in-container
+edits. Both were retired in favor of the Docker image; on the cluster, pull it with
+`apptainer pull docker://ghcr.io/educelab/spectral-analysis:latest`. The image installs the package
+non-editable and sets `WORKDIR /data`, so there is no overlay-based dev workflow — the SBATCH header
+and rclone bind settings from `submit_job.sh` are recoverable from git history if needed.

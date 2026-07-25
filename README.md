@@ -13,15 +13,41 @@ Tools for processing and analyzing spectral image sets.
 ### From source
 ```bash
 # get source code
-git clone https://gitlab.com/educelab/spectral-analysis.git
+git clone https://github.com/educelab/spectral-analysis.git
 
 # (optional) setup a virtual environment
-pyhon3 -m venv spectral-analysis/venv/
+python3 -m venv spectral-analysis/venv/
 source spectral-analysis/venv/bin/activate
 
 # install the project
 python3 -m pip install --upgrade pip wheel setuptools
 python3 -m pip install spectral-analysis/
+```
+
+### Docker
+A prebuilt image is published to the GitHub Container Registry with ExifTool
+already installed. Tags: `latest` (most recent release), `edge` (tip of `main`),
+and one per release version (e.g. `2.1.0`).
+
+```bash
+docker pull ghcr.io/educelab/spectral-analysis:latest
+
+# mount the current directory at /data (the image's working directory)
+docker run --rm -v "$PWD:/data" ghcr.io/educelab/spectral-analysis \
+  spec-pca -i 'training_set/*.tif' -o training_pca/
+```
+
+Quote glob patterns so they are expanded inside the container rather than by
+your shell against host paths. Any of the three console scripts can be used as
+the command.
+
+### Apptainer/Singularity (HPC)
+Pull the same image directly — there is no separate container definition to
+build:
+
+```bash
+apptainer pull spectral-analysis.sif docker://ghcr.io/educelab/spectral-analysis:latest
+apptainer run spectral-analysis.sif spec-pca -i 'training_set/*.tif' -o training_pca/
 ```
 
 ## API

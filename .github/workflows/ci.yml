@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Runs the suite across the full supported interpreter range. setup.cfg
+  # declares python_requires >=3.10, so all four are tested; fail-fast is off so
+  # one version's failure does not mask the others. Note that numpy 2.5 dropped
+  # cp311 wheels, so the 3.10/3.11 legs resolve an older numpy/scikit-image
+  # stack than 3.12/3.13 do.
+  test:
+    name: py ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # spec-enhance shells out to exiftool via educelab.imgproc.exiftool. On
+      # Ubuntu the binary comes from libimage-exiftool-perl; the bare `exiftool`
+      # package name used by the old GitLab pipeline only resolved because that
+      # ran on a Debian python: image.
+      - name: Install ExifTool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libimage-exiftool-perl
+          exiftool -ver
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install .
+
+      - name: Smoke test console scripts
+        run: |
+          spec-enhance -h
+          spec-pca -h
+          spec-apply-flats -h
+
+      - name: Run tests
+        run: python -m unittest -v tests.test_spec_tools
