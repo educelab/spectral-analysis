@@ -1,0 +1,81 @@
+name: Build Docker image
+
+# On main/tags/dispatch this builds and publishes. On pull requests it builds the
+# same platforms but does not push, so Dockerfile breakage is caught before merge.
+#
+# Runs independently of CI rather than gating on it: the image build is itself a
+# real check (a broken install fails it). A red test suite can still publish a
+# tagged image.
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+# Grouped per ref so PR validation builds don't serialize behind each other or
+# behind a release publish. Superseded PR builds are cancelled; publishing runs
+# are always allowed to finish.
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  REGISTRY: ghcr.io
+  REGISTRY_IMAGE: educelab/spectral-analysis
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build and push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.REGISTRY_IMAGE }}
+          # `latest` tracks the most recent release tag; `edge` tracks main.
+          flavor: latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+            type=edge
+
+      # Skipped on pull requests: nothing is pushed, and GITHUB_TOKEN is
+      # read-only for fork PRs so a login would fail outright.
+      - name: Login to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Needed for the emulated arm64 leg, which runs on PRs too.
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # Both arches everywhere, so a PR validates exactly what a publish will
+      # build. The arm64 leg runs under QEMU emulation -- expect a slow job even
+      # on PRs. PR builds differ from publishing builds only in not pushing.
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

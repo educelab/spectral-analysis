@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 3.12 is the floor declared by setup.cfg's python_requires. The dependency
+  # stack forced it: tifffile requires >=3.12 and numpy 2.5 dropped cp310/cp311,
+  # so older interpreters cannot install current versions of this project's own
+  # dependencies. fail-fast is off so one version's failure does not mask others.
+  test:
+    name: py ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # spec-enhance shells out to exiftool via educelab.imgproc.exiftool. On
+      # Ubuntu the binary comes from libimage-exiftool-perl; the bare `exiftool`
+      # package name used by the old GitLab pipeline only resolved because that
+      # ran on a Debian python: image.
+      - name: Install ExifTool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libimage-exiftool-perl
+          exiftool -ver
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install .
+
+      - name: Smoke test console scripts
+        run: |
+          spec-enhance -h
+          spec-pca -h
+          spec-apply-flats -h
+
+      - name: Run tests
+        run: python -m unittest -v tests.test_spec_tools

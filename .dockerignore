@@ -1,0 +1,20 @@
+# Keep the build context small. The image installs dependencies fresh from PyPI,
+# so none of these belong in it.
+.git
+.github
+.idea
+.DS_Store
+**/__pycache__
+**/*.pyc
+**/*.egg-info
+**/venv
+**/.venv
+.pytest_cache
+
+# Reference only -- excluded from the installed package, so it is pure weight.
+legacy
+
+# Built containers and local test data
+*.sif
+test_data
+scripts/data
