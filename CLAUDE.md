@@ -90,8 +90,13 @@ implemented here. Key touchpoints:
 image → `img_as_float` → process → pick an output dtype (forced to `uint8` for bmp/jpg, else
 `--output-depth`, else the input dtype) → apply format-specific write kwargs (jpeg `quality`, tiff
 `zlib` compression) → write. `spec-enhance` additionally writes a timestamped JSON run log
-(args + resolved pipeline) into the output directory and stamps a `-Software=` ExifTool tag; bump
-`ENHANCE_VERSION` in `spec_tools/apps/enhance.py` when its behavior changes.
+(args + resolved pipeline) into the output directory and stamps a `-Software=` ExifTool tag.
+
+Both the run log's `program` field and the `-Software=` tag report `spec_tools.__version__`, which
+`spec_tools/__init__.py` derives from the installed package metadata via
+`importlib.metadata.version('spectral-analysis')`. So the single source of truth is `version` in
+`setup.cfg` — there is no per-app version constant to bump. If the package is not installed at all,
+`__version__` falls back to `'0.0.0+unknown'` rather than asserting a version.
 
 `spec-pca` selects its decomposition with `--method/-m` (`pca` default, or `ica`); `--incremental`
 is PCA-only and errors out if combined with `ica`. It supports fit-then-persist workflows:

@@ -12,14 +12,10 @@ from skimage import img_as_float
 from tqdm import tqdm
 import imageio.v3 as iio
 
+from spec_tools import __version__
 from spec_tools.utils.apps import (expand_path_list, setup_logging,
                                    to_numpy_dtype)
 
-VERSION_MAJOR = 1
-VERSION_MINOR = 2
-VERSION_PATCH = 0
-VERSION_SUFFIX = ''
-ENHANCE_VERSION = f'{VERSION_MAJOR}.{VERSION_MINOR}.{VERSION_PATCH}{VERSION_SUFFIX}'
 
 def main():
     # Parse args
@@ -81,7 +77,7 @@ def main():
     if args.logfile:
         now_ts = dt.now(tz.utc)
         meta = {
-            'program': f'{parser.prog} v{ENHANCE_VERSION}',
+            'program': f'{parser.prog} v{__version__}',
             'created': now_ts.strftime('%m/%d/%Y, %H:%M:%S (%Z)'),
             'args': args.__dict__,
             'images': [str(i) for i in input_images],
@@ -144,7 +140,7 @@ def main():
 
         # Copy metadata
         if args.metadata:
-            extra_tags = [f'-Software=EduceLab spec-enhance v{ENHANCE_VERSION}']
+            extra_tags = [f'-Software=EduceLab spec-enhance v{__version__}']
             exiftool.copy_all(img_path, out_path, extra_tags=extra_tags)
 
 
